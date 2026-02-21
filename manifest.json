@@ -1,0 +1,41 @@
+{
+  "appId": "servicenova",
+  "version": "1.0.0",
+  "capabilities": [
+    "field.dispatch.optimize",
+    "field.jobs.intelligence",
+    "field.routes.replan",
+    "servicenova.ai.assist"
+  ],
+  "api": {
+    "basePath": "/api",
+    "openApiUrl": "/api/openapi.json"
+  },
+  "events": {
+    "published": [
+      "field.job.assigned",
+      "field.job.intelligence.generated",
+      "field.route.optimized"
+    ],
+    "subscribed": [
+      "iot.alert.received",
+      "maintenance.ticket.created"
+    ]
+  },
+  "ai": {
+    "assistant": {
+      "enabled": true,
+      "entrypoint": "/api/field/jobs/:jobId/intelligence"
+    },
+    "automationAgents": [
+      "dispatch-optimizer-agent",
+      "technician-briefing-agent"
+    ],
+    "analyticsAgent": [
+      "field-ops-insights-agent"
+    ],
+    "guardrails": {
+      "dataClass": "internal"
+    }
+  }
+}

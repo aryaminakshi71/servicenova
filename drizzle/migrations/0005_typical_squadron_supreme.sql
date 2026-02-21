@@ -1,0 +1,1 @@
+ALTER TYPE "public"."audit_event_type" ADD VALUE 'disruption_handled' BEFORE 'job_status_transition';

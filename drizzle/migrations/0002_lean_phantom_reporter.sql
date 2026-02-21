@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "rate_limit_counters_reset_at_idx" ON "rate_limit_counters" USING btree ("reset_at");
