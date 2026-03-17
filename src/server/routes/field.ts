@@ -1,5 +1,5 @@
-import { type Context, Hono } from "hono";
-import { z } from "zod";
+import { type Context, Hono } from 'hono';
+import { z } from 'zod';
 import {
 	addProofOfService,
 	assessMaintenanceRisk,
@@ -34,10 +34,10 @@ import {
 	unassignJob,
 	updateJobChecklist,
 	updateTechnicianShift,
-} from "../../features/field-ops";
-import { getDisruptionFeedProvider } from "../../features/field-ops/disruption-feed";
-import { getFieldIntelligenceProvider } from "../../features/field-ops/intelligence-provider";
-import { runWithTenantContext } from "../../features/field-ops/tenant-context";
+} from '../../features/field-ops';
+import { getDisruptionFeedProvider } from '../../features/field-ops/disruption-feed';
+import { getFieldIntelligenceProvider } from '../../features/field-ops/intelligence-provider';
+import { runWithTenantContext } from '../../features/field-ops/tenant-context';
 import {
 	createInvoiceFromCompletedJob,
 	flushIntegrationOutbox,
@@ -48,13 +48,13 @@ import {
 	listInvoices,
 	requeueIntegrationOutboxDeadLetters,
 	syncCrmWorkOrderEvent,
-} from "../../features/integrations";
-import { ensureRole, getAuth } from "../auth";
+} from '../../features/integrations';
+import { ensureRole, getAuth } from '../auth';
 import {
 	enqueueBackgroundJob,
 	getBackgroundJob,
 	listBackgroundJobs,
-} from "../background-jobs";
+} from '../background-jobs';
 import {
 	appendIncidentTimelineEvent,
 	type DriftAlertAcknowledgement,
@@ -64,36 +64,36 @@ import {
 	resetFieldDashboardStateForTests,
 	updateDashboardOnboardingState,
 	upsertDriftAlertAcknowledgement,
-} from "../field-dashboard-state";
-import { featureFlags } from "../flags";
+} from '../field-dashboard-state';
+import { featureFlags } from '../flags';
 import {
 	idempotencyKey,
 	replayIdempotent,
 	storeIdempotent,
-} from "../idempotency";
+} from '../idempotency';
 import {
 	getObservabilitySnapshot,
 	recordResilienceEvent,
-} from "../observability";
-import { enforceRateLimit } from "../rate-limit";
-import { nowMs } from "../test-controls";
+} from '../observability';
+import { enforceRateLimit } from '../rate-limit';
+import { nowMs } from '../test-controls';
 
 export const fieldRoutes = new Hono();
 
-fieldRoutes.use("*", async (c, next) => {
+fieldRoutes.use('*', async (c, next) => {
 	const auth = getAuth(c);
 
 	return runWithTenantContext(auth.tenantId, async () => {
-		const isIntegrationPath = c.req.path.includes("/integrations/");
+		const isIntegrationPath = c.req.path.includes('/integrations/');
 
 		if (isIntegrationPath) {
-			const blocked = await enforceRateLimit(c, "integration");
+			const blocked = await enforceRateLimit(c, 'integration');
 
 			if (blocked) {
 				return blocked;
 			}
-		} else if (c.req.method === "POST") {
-			const blocked = await enforceRateLimit(c, "mutation");
+		} else if (c.req.method === 'POST') {
+			const blocked = await enforceRateLimit(c, 'mutation');
 
 			if (blocked) {
 				return blocked;
@@ -129,13 +129,13 @@ const shiftSchema = z.object({
 const routePlanSchema = z.object({
 	technicianId: z.string().min(1),
 	date: z.string().min(10),
-	trafficLevel: z.enum(["low", "normal", "high"]).optional(),
+	trafficLevel: z.enum(['low', 'normal', 'high']).optional(),
 });
 
 const routeReplanSchema = z.object({
 	date: z.string().min(10),
 	technicianId: z.string().min(1).optional(),
-	trafficLevel: z.enum(["low", "normal", "high"]).optional(),
+	trafficLevel: z.enum(['low', 'normal', 'high']).optional(),
 });
 
 const checklistUpdateSchema = z.object({
@@ -171,7 +171,7 @@ const maintenanceRiskSchema = z.object({
 	assetAgeMonths: z.number().int().nonnegative(),
 	incidentsLast90Days: z.number().int().nonnegative(),
 	avgRepairMinutes: z.number().int().nonnegative(),
-	usageIntensity: z.enum(["low", "medium", "high"]),
+	usageIntensity: z.enum(['low', 'medium', 'high']),
 });
 
 const jobIntelligenceSchema = z.object({
@@ -186,9 +186,9 @@ const technicianAssistSchema = z.object({
 const disruptionSchema = z
 	.object({
 		type: z.enum([
-			"technician_unavailable",
-			"traffic_incident",
-			"weather_alert",
+			'technician_unavailable',
+			'traffic_incident',
+			'weather_alert',
 		]),
 		technicianId: z.string().min(1).optional(),
 		affectedJobIds: z.array(z.string().min(1)).max(100).optional(),
@@ -196,12 +196,12 @@ const disruptionSchema = z
 		actor: z.string().min(1).optional(),
 	})
 	.superRefine((value, ctx) => {
-		if (value.type === "technician_unavailable" && !value.technicianId) {
+		if (value.type === 'technician_unavailable' && !value.technicianId) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
-				path: ["technicianId"],
+				path: ['technicianId'],
 				message:
-					"technicianId is required for technician_unavailable disruptions",
+					'technicianId is required for technician_unavailable disruptions',
 			});
 		}
 	});
@@ -230,13 +230,13 @@ const automationCycleSchema = z.object({
 
 const intelligenceConfirmSchema = z.object({
 	runId: z.string().min(1),
-	action: z.enum(["auto_dispatch", "parts_order", "customer_eta_update"]),
+	action: z.enum(['auto_dispatch', 'parts_order', 'customer_eta_update']),
 	actor: z.string().min(1).optional(),
 });
 
 const mobileOperationSchema = z.object({
 	clientOperationId: z.string().min(1),
-	type: z.enum(["start_job", "complete_job", "update_checklist", "add_proof"]),
+	type: z.enum(['start_job', 'complete_job', 'update_checklist', 'add_proof']),
 	payload: z.record(z.string(), z.unknown()),
 });
 
@@ -279,7 +279,7 @@ const onboardingUpdateSchema = z
 			value.automationCycle !== undefined ||
 			value.dismissed !== undefined,
 		{
-			message: "At least one onboarding field is required",
+			message: 'At least one onboarding field is required',
 		},
 	);
 
@@ -293,7 +293,7 @@ const driftAlertAcknowledgeSchema = z.object({
 function validationError(c: Context, issues: unknown) {
 	return c.json(
 		{
-			error: "Invalid request payload",
+			error: 'Invalid request payload',
 			issues,
 		},
 		400,
@@ -306,7 +306,7 @@ function notEnabled(c: Context, feature: string) {
 
 function enforceRole(
 	c: Context,
-	roles: Array<"technician" | "dispatcher" | "manager" | "admin">,
+	roles: Array<'technician' | 'dispatcher' | 'manager' | 'admin'>,
 ) {
 	const forbidden = ensureRole(c, roles);
 
@@ -366,7 +366,7 @@ function parseIntEnv(name: string, fallback: number, min: number, max: number) {
 
 function intelligenceGuardrailThreshold() {
 	return parseFloatEnv(
-		"INTELLIGENCE_AUTO_ACTION_MIN_CONFIDENCE",
+		'INTELLIGENCE_AUTO_ACTION_MIN_CONFIDENCE',
 		0.72,
 		0.3,
 		0.99,
@@ -375,12 +375,12 @@ function intelligenceGuardrailThreshold() {
 
 function integrationUnavailable(
 	c: Context,
-	integration: "crm" | "invoicing",
+	integration: 'crm' | 'invoicing',
 	error: unknown,
 ) {
-	const requestId = (c.get("requestId") as string | undefined) ?? null;
+	const requestId = (c.get('requestId') as string | undefined) ?? null;
 
-	if (process.env.NODE_ENV !== "test" && process.env.VITEST !== "true") {
+	if (process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true') {
 		console.warn(
 			`[integration] ${JSON.stringify({
 				integration,
@@ -463,12 +463,12 @@ async function runAutoDisruptionSweep(
 	};
 }
 
-fieldRoutes.get("/dashboard/onboarding", async (c) => {
+fieldRoutes.get('/dashboard/onboarding', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -481,12 +481,12 @@ fieldRoutes.get("/dashboard/onboarding", async (c) => {
 	});
 });
 
-fieldRoutes.post("/dashboard/onboarding", async (c) => {
+fieldRoutes.post('/dashboard/onboarding', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -507,12 +507,12 @@ fieldRoutes.post("/dashboard/onboarding", async (c) => {
 		parsed.data,
 	);
 	const changedFields = Object.entries(parsed.data)
-		.filter(([key, value]) => key !== "actor" && value !== undefined)
+		.filter(([key, value]) => key !== 'actor' && value !== undefined)
 		.map(([key]) => key);
 
 	await appendIncidentTimelineEvent(auth.tenantId, {
-		type: "onboarding_updated",
-		severity: "info",
+		type: 'onboarding_updated',
+		severity: 'info',
 		message: `Dashboard onboarding updated for ${auth.userId}.`,
 		actor: parsed.data.actor ?? auth.userId,
 		context: {
@@ -524,7 +524,7 @@ fieldRoutes.post("/dashboard/onboarding", async (c) => {
 	return c.json({ onboarding });
 });
 
-fieldRoutes.get("/dispatch-board", async (c) => {
+fieldRoutes.get('/dispatch-board', async (c) => {
 	const auth = getAuth(c);
 
 	if (featureFlags.autoDisruptionMonitor) {
@@ -540,7 +540,7 @@ fieldRoutes.get("/dispatch-board", async (c) => {
 			try {
 				await runAutoDisruptionSweep(auth.userId, auth.tenantId, 5);
 			} catch {
-				c.header("x-auto-disruption-warning", "sweep-failed");
+				c.header('x-auto-disruption-warning', 'sweep-failed');
 			}
 		}
 	}
@@ -548,21 +548,25 @@ fieldRoutes.get("/dispatch-board", async (c) => {
 	return c.json(getDispatchBoard());
 });
 
-fieldRoutes.get("/dispatch-board/stream", (c) => {
+fieldRoutes.get('/dispatch-board/stream', (c) => {
 	if (!featureFlags.realtimeBoard) {
-		return notEnabled(c, "realtimeBoard");
+		return notEnabled(c, 'realtimeBoard');
 	}
 
+	const auth = getAuth(c);
 	const encoder = new TextEncoder();
 	let timer: ReturnType<typeof setInterval> | null = null;
 
 	const stream = new ReadableStream<Uint8Array>({
 		start(controller) {
 			const send = () => {
+				const board = runWithTenantContext(auth.tenantId, () =>
+					getDispatchBoard(),
+				);
 				const payload = JSON.stringify({
-					type: "dispatch-board",
+					type: 'dispatch-board',
 					timestamp: new Date().toISOString(),
-					board: getDispatchBoard(),
+					board,
 				});
 				controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
 			};
@@ -579,37 +583,37 @@ fieldRoutes.get("/dispatch-board/stream", (c) => {
 
 	return new Response(stream, {
 		headers: {
-			"content-type": "text/event-stream",
-			"cache-control": "no-cache",
-			connection: "keep-alive",
+			'content-type': 'text/event-stream',
+			'cache-control': 'no-cache',
+			connection: 'keep-alive',
 		},
 	});
 });
 
-fieldRoutes.get("/ops/incidents", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.get('/ops/incidents', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	const auth = getAuth(c);
-	const limit = parseLimit(c.req.query("limit"), 50, 200);
+	const limit = parseLimit(c.req.query('limit'), 50, 200);
 
 	return c.json({
 		incidents: await listIncidentTimelineEvents(auth.tenantId, limit),
 	});
 });
 
-fieldRoutes.get("/ops/incidents/stream", (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.get('/ops/incidents/stream', (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	const auth = getAuth(c);
-	const limit = parseLimit(c.req.query("limit"), 30, 200);
+	const limit = parseLimit(c.req.query('limit'), 30, 200);
 	const encoder = new TextEncoder();
 	let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -617,7 +621,7 @@ fieldRoutes.get("/ops/incidents/stream", (c) => {
 		start(controller) {
 			const send = async () => {
 				const payload = JSON.stringify({
-					type: "ops-incidents",
+					type: 'ops-incidents',
 					timestamp: nowIso(),
 					incidents: await listIncidentTimelineEvents(auth.tenantId, limit),
 				});
@@ -638,15 +642,15 @@ fieldRoutes.get("/ops/incidents/stream", (c) => {
 
 	return new Response(stream, {
 		headers: {
-			"content-type": "text/event-stream",
-			"cache-control": "no-cache",
-			connection: "keep-alive",
+			'content-type': 'text/event-stream',
+			'cache-control': 'no-cache',
+			connection: 'keep-alive',
 		},
 	});
 });
 
-fieldRoutes.post("/dispatch/disruptions", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/dispatch/disruptions', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -665,7 +669,7 @@ fieldRoutes.post("/dispatch/disruptions", async (c) => {
 		actor: parsed.data.actor ?? auth.userId,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "dispatch-disruption", payload)
+		? idempotencyKey(c, 'dispatch-disruption', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -678,11 +682,11 @@ fieldRoutes.post("/dispatch/disruptions", async (c) => {
 
 	const result = handleDispatchDisruption(payload);
 	await appendIncidentTimelineEvent(auth.tenantId, {
-		type: "dispatch_disruption",
+		type: 'dispatch_disruption',
 		severity:
 			result.blockedJobIds.length > 0 || result.queuedJobIds.length > 0
-				? "warning"
-				: "info",
+				? 'warning'
+				: 'info',
 		message: `Disruption handled (${result.type}): reassigned ${result.reassignedJobIds.length}, queued ${result.queuedJobIds.length}, blocked ${result.blockedJobIds.length}.`,
 		actor: payload.actor,
 		context: {
@@ -705,10 +709,10 @@ fieldRoutes.post("/dispatch/disruptions", async (c) => {
 			try {
 				const sync = await syncCrmWorkOrderEvent(job);
 				if (sync.queued) {
-					c.header("x-integration-outbox", sync.outboxEntryId ?? "queued");
+					c.header('x-integration-outbox', sync.outboxEntryId ?? 'queued');
 				}
 			} catch {
-				c.header("x-integration-warning", "crm-sync-failed");
+				c.header('x-integration-warning', 'crm-sync-failed');
 				break;
 			}
 		}
@@ -721,15 +725,15 @@ fieldRoutes.post("/dispatch/disruptions", async (c) => {
 	return c.json(result);
 });
 
-fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/dispatch/disruptions/auto-run', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.autoDisruptionMonitor) {
-		return notEnabled(c, "autoDisruptionMonitor");
+		return notEnabled(c, 'autoDisruptionMonitor');
 	}
 
 	const body = await c.req.json().catch(() => ({}));
@@ -743,7 +747,7 @@ fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
 
 	if (parsed.data.async) {
 		const job = await enqueueBackgroundJob({
-			type: "dispatch_auto_disruption",
+			type: 'dispatch_auto_disruption',
 			tenantId: auth.tenantId,
 			payload: {
 				actor: parsed.data.actor ?? auth.userId,
@@ -751,9 +755,9 @@ fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
 			},
 		});
 		await appendIncidentTimelineEvent(auth.tenantId, {
-			type: "auto_disruption_queued",
-			severity: "info",
-			message: "Auto disruption sweep queued.",
+			type: 'auto_disruption_queued',
+			severity: 'info',
+			message: 'Auto disruption sweep queued.',
 			actor: parsed.data.actor ?? auth.userId,
 			context: {
 				backgroundJobId: job.id,
@@ -777,8 +781,8 @@ fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
 			parsed.data.maxSignals ?? 10,
 		);
 		await appendIncidentTimelineEvent(auth.tenantId, {
-			type: "auto_disruption_completed",
-			severity: result.processedSignals > 0 ? "warning" : "info",
+			type: 'auto_disruption_completed',
+			severity: result.processedSignals > 0 ? 'warning' : 'info',
 			message: `Auto disruption sweep processed ${result.processedSignals} of ${result.detectedSignals} signals.`,
 			actor: parsed.data.actor ?? auth.userId,
 			context: {
@@ -789,9 +793,9 @@ fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
 		return c.json(result);
 	} catch (error) {
 		await appendIncidentTimelineEvent(auth.tenantId, {
-			type: "auto_disruption_failed",
-			severity: "critical",
-			message: "Auto disruption sweep failed.",
+			type: 'auto_disruption_failed',
+			severity: 'critical',
+			message: 'Auto disruption sweep failed.',
 			actor: parsed.data.actor ?? auth.userId,
 			context: {
 				error: String(error),
@@ -799,7 +803,7 @@ fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
 		});
 		return c.json(
 			{
-				error: "Auto disruption sweep failed",
+				error: 'Auto disruption sweep failed',
 				detail: String(error),
 			},
 			502,
@@ -807,8 +811,8 @@ fieldRoutes.post("/dispatch/disruptions/auto-run", async (c) => {
 	}
 });
 
-fieldRoutes.post("/dispatch/optimize", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/dispatch/optimize', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -825,7 +829,7 @@ fieldRoutes.post("/dispatch/optimize", async (c) => {
 
 	if (parsed.data.async) {
 		const job = await enqueueBackgroundJob({
-			type: "dispatch_optimize",
+			type: 'dispatch_optimize',
 			tenantId: auth.tenantId,
 			payload: {
 				includeAssigned: parsed.data.includeAssigned,
@@ -834,9 +838,9 @@ fieldRoutes.post("/dispatch/optimize", async (c) => {
 			},
 		});
 		await appendIncidentTimelineEvent(auth.tenantId, {
-			type: "dispatch_optimization_queued",
-			severity: "info",
-			message: "Dispatch optimization queued.",
+			type: 'dispatch_optimization_queued',
+			severity: 'info',
+			message: 'Dispatch optimization queued.',
 			actor: parsed.data.actor ?? auth.userId,
 			context: {
 				backgroundJobId: job.id,
@@ -859,8 +863,8 @@ fieldRoutes.post("/dispatch/optimize", async (c) => {
 		actor: parsed.data.actor ?? auth.userId,
 	});
 	await appendIncidentTimelineEvent(auth.tenantId, {
-		type: "dispatch_optimization_completed",
-		severity: result.unassignedJobIds.length > 0 ? "warning" : "info",
+		type: 'dispatch_optimization_completed',
+		severity: result.unassignedJobIds.length > 0 ? 'warning' : 'info',
 		message: `Dispatch optimization completed with ${result.assignments.length} assignments and ${result.unassignedJobIds.length} unresolved jobs.`,
 		actor: parsed.data.actor ?? auth.userId,
 		context: {
@@ -872,8 +876,8 @@ fieldRoutes.post("/dispatch/optimize", async (c) => {
 	return c.json(result);
 });
 
-fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.post('/ops/automation/run-cycle', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -897,7 +901,7 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 		if (runAutoDisruption && featureFlags.autoDisruptionMonitor) {
 			jobs.push(
 				await enqueueBackgroundJob({
-					type: "dispatch_auto_disruption",
+					type: 'dispatch_auto_disruption',
 					tenantId: auth.tenantId,
 					payload: {
 						actor,
@@ -910,11 +914,11 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 		if (runOptimization) {
 			jobs.push(
 				await enqueueBackgroundJob({
-					type: "dispatch_optimize",
+					type: 'dispatch_optimize',
 					tenantId: auth.tenantId,
 					payload: {
 						includeAssigned: parsed.data.includeAssigned ?? true,
-						reason: "automation cycle optimization",
+						reason: 'automation cycle optimization',
 						actor,
 					},
 				}),
@@ -924,7 +928,7 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 		if (featureFlags.integrationOutbox) {
 			jobs.push(
 				await enqueueBackgroundJob({
-					type: "integration_outbox_flush",
+					type: 'integration_outbox_flush',
 					tenantId: auth.tenantId,
 					payload: {
 						maxBatch: 25,
@@ -933,9 +937,9 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 			);
 		}
 		await appendIncidentTimelineEvent(auth.tenantId, {
-			type: "automation_cycle_queued",
-			severity: "info",
-			message: "Automation cycle queued.",
+			type: 'automation_cycle_queued',
+			severity: 'info',
+			message: 'Automation cycle queued.',
 			actor,
 			context: {
 				runAutoDisruption,
@@ -965,7 +969,7 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 			);
 		} catch (error) {
 			disruption = {
-				error: "Auto disruption sweep failed",
+				error: 'Auto disruption sweep failed',
 				detail: String(error),
 			};
 		}
@@ -974,22 +978,22 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 	if (runOptimization) {
 		optimization = optimizeDispatchAssignments({
 			includeAssigned: parsed.data.includeAssigned ?? true,
-			reason: "automation cycle optimization",
+			reason: 'automation cycle optimization',
 			actor,
 		});
 	}
 
 	const driftAlerts = getWorkOrderIntelligenceDriftAlerts({
-		windowHours: parseIntEnv("INTELLIGENCE_DRIFT_WINDOW_HOURS", 24, 1, 720),
-		minSampleCount: parseIntEnv("INTELLIGENCE_DRIFT_MIN_SAMPLES", 3, 1, 1000),
+		windowHours: parseIntEnv('INTELLIGENCE_DRIFT_WINDOW_HOURS', 24, 1, 720),
+		minSampleCount: parseIntEnv('INTELLIGENCE_DRIFT_MIN_SAMPLES', 3, 1, 1000),
 		maxMaeMinutes: parseFloatEnv(
-			"INTELLIGENCE_DRIFT_MAX_MAE_MINUTES",
+			'INTELLIGENCE_DRIFT_MAX_MAE_MINUTES',
 			35,
 			5,
 			480,
 		),
 		minWithin15Rate: parseFloatEnv(
-			"INTELLIGENCE_DRIFT_MIN_WITHIN15_RATE",
+			'INTELLIGENCE_DRIFT_MIN_WITHIN15_RATE',
 			0.55,
 			0.05,
 			1,
@@ -1000,8 +1004,8 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 		tenantId: auth.tenantId,
 	});
 	await appendIncidentTimelineEvent(auth.tenantId, {
-		type: "automation_cycle_completed",
-		severity: driftAlerts.length > 0 ? "warning" : "info",
+		type: 'automation_cycle_completed',
+		severity: driftAlerts.length > 0 ? 'warning' : 'info',
 		message: `Automation cycle completed. Drift alerts: ${driftAlerts.length}.`,
 		actor,
 		context: {
@@ -1024,8 +1028,8 @@ fieldRoutes.post("/ops/automation/run-cycle", async (c) => {
 	});
 });
 
-fieldRoutes.post("/jobs/assign", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/jobs/assign', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1039,7 +1043,7 @@ fieldRoutes.post("/jobs/assign", async (c) => {
 	}
 
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "assign-job", parsed.data)
+		? idempotencyKey(c, 'assign-job', parsed.data)
 		: null;
 
 	if (idempotencyScope) {
@@ -1055,21 +1059,21 @@ fieldRoutes.post("/jobs/assign", async (c) => {
 		...parsed.data,
 		actor: parsed.data.actor ?? auth.userId,
 	});
-	if ("assigned" in result && result.assigned) {
+	if ('assigned' in result && result.assigned) {
 		const job = getJobById(result.jobId);
 
 		if (job && featureFlags.crmIntegration) {
 			try {
 				const sync = await syncCrmWorkOrderEvent(job);
 				if (sync.queued) {
-					c.header("x-integration-outbox", sync.outboxEntryId ?? "queued");
+					c.header('x-integration-outbox', sync.outboxEntryId ?? 'queued');
 				}
 			} catch {
-				c.header("x-integration-warning", "crm-sync-failed");
+				c.header('x-integration-warning', 'crm-sync-failed');
 			}
 		}
 	}
-	const status = "assigned" in result && result.assigned ? 202 : 409;
+	const status = 'assigned' in result && result.assigned ? 202 : 409;
 
 	if (idempotencyScope) {
 		await storeIdempotent(idempotencyScope, status, result);
@@ -1078,8 +1082,8 @@ fieldRoutes.post("/jobs/assign", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.post("/jobs/reassign", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/jobs/reassign', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1093,7 +1097,7 @@ fieldRoutes.post("/jobs/reassign", async (c) => {
 	}
 
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "reassign-job", parsed.data)
+		? idempotencyKey(c, 'reassign-job', parsed.data)
 		: null;
 
 	if (idempotencyScope) {
@@ -1109,21 +1113,21 @@ fieldRoutes.post("/jobs/reassign", async (c) => {
 		...parsed.data,
 		actor: parsed.data.actor ?? auth.userId,
 	});
-	if ("assigned" in result && result.assigned) {
+	if ('assigned' in result && result.assigned) {
 		const job = getJobById(result.jobId);
 
 		if (job && featureFlags.crmIntegration) {
 			try {
 				const sync = await syncCrmWorkOrderEvent(job);
 				if (sync.queued) {
-					c.header("x-integration-outbox", sync.outboxEntryId ?? "queued");
+					c.header('x-integration-outbox', sync.outboxEntryId ?? 'queued');
 				}
 			} catch {
-				c.header("x-integration-warning", "crm-sync-failed");
+				c.header('x-integration-warning', 'crm-sync-failed');
 			}
 		}
 	}
-	const status = "assigned" in result && result.assigned ? 202 : 409;
+	const status = 'assigned' in result && result.assigned ? 202 : 409;
 
 	if (idempotencyScope) {
 		await storeIdempotent(idempotencyScope, status, result);
@@ -1132,8 +1136,8 @@ fieldRoutes.post("/jobs/reassign", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.post("/jobs/unassign", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/jobs/unassign', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1147,7 +1151,7 @@ fieldRoutes.post("/jobs/unassign", async (c) => {
 	}
 
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "unassign-job", parsed.data)
+		? idempotencyKey(c, 'unassign-job', parsed.data)
 		: null;
 
 	if (idempotencyScope) {
@@ -1172,12 +1176,12 @@ fieldRoutes.post("/jobs/unassign", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.get("/jobs/unassigned", (c) => {
+fieldRoutes.get('/jobs/unassigned', (c) => {
 	return c.json({ queue: getUnassignedQueue() });
 });
 
-fieldRoutes.post("/technicians/:technicianId/shifts", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/technicians/:technicianId/shifts', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1192,12 +1196,12 @@ fieldRoutes.post("/technicians/:technicianId/shifts", async (c) => {
 
 	const auth = getAuth(c);
 	const payload = {
-		technicianId: c.req.param("technicianId"),
+		technicianId: c.req.param('technicianId'),
 		...parsed.data,
 		actor: parsed.data.actor ?? auth.userId,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "update-shift", payload)
+		? idempotencyKey(c, 'update-shift', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -1218,8 +1222,8 @@ fieldRoutes.post("/technicians/:technicianId/shifts", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.post("/routes/plan", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/routes/plan', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1235,11 +1239,11 @@ fieldRoutes.post("/routes/plan", async (c) => {
 	const payload = {
 		technicianId: parsed.data.technicianId,
 		date: parsed.data.date,
-		triggeredBy: "manual",
+		triggeredBy: 'manual',
 		trafficLevel: parsed.data.trafficLevel,
 	} as const;
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "route-plan", payload)
+		? idempotencyKey(c, 'route-plan', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -1253,7 +1257,7 @@ fieldRoutes.post("/routes/plan", async (c) => {
 	const plan = generateRoutePlan(payload);
 
 	if (!plan) {
-		return c.json({ error: "Technician not found" }, 404);
+		return c.json({ error: 'Technician not found' }, 404);
 	}
 
 	if (idempotencyScope) {
@@ -1263,8 +1267,8 @@ fieldRoutes.post("/routes/plan", async (c) => {
 	return c.json(plan, 201);
 });
 
-fieldRoutes.post("/routes/replan", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/routes/replan', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1278,7 +1282,7 @@ fieldRoutes.post("/routes/replan", async (c) => {
 	}
 
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "route-replan", parsed.data)
+		? idempotencyKey(c, 'route-replan', parsed.data)
 		: null;
 
 	if (idempotencyScope) {
@@ -1298,27 +1302,27 @@ fieldRoutes.post("/routes/replan", async (c) => {
 	return c.json(result);
 });
 
-fieldRoutes.get("/routes/daily", (c) => {
-	const date = c.req.query("date");
+fieldRoutes.get('/routes/daily', (c) => {
+	const date = c.req.query('date');
 	return c.json({ routes: getRoutePlans(date) });
 });
 
-fieldRoutes.get("/jobs/:jobId/checklist", (c) => {
-	const checklist = getJobChecklist(c.req.param("jobId"));
+fieldRoutes.get('/jobs/:jobId/checklist', (c) => {
+	const checklist = getJobChecklist(c.req.param('jobId'));
 
 	if (!checklist) {
-		return c.json({ error: "Job not found" }, 404);
+		return c.json({ error: 'Job not found' }, 404);
 	}
 
 	return c.json({ checklist });
 });
 
-fieldRoutes.post("/jobs/:jobId/checklist", async (c) => {
+fieldRoutes.post('/jobs/:jobId/checklist', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1332,9 +1336,9 @@ fieldRoutes.post("/jobs/:jobId/checklist", async (c) => {
 		return validationError(c, parsed.error.issues);
 	}
 
-	const payload = { jobId: c.req.param("jobId"), ...parsed.data };
+	const payload = { jobId: c.req.param('jobId'), ...parsed.data };
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "job-checklist", payload)
+		? idempotencyKey(c, 'job-checklist', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -1348,7 +1352,7 @@ fieldRoutes.post("/jobs/:jobId/checklist", async (c) => {
 	const checklist = updateJobChecklist(payload);
 
 	if (!checklist) {
-		return c.json({ error: "Job not found" }, 404);
+		return c.json({ error: 'Job not found' }, 404);
 	}
 
 	const responseBody = { checklist };
@@ -1360,12 +1364,12 @@ fieldRoutes.post("/jobs/:jobId/checklist", async (c) => {
 	return c.json(responseBody);
 });
 
-fieldRoutes.post("/jobs/:jobId/proof-of-service", async (c) => {
+fieldRoutes.post('/jobs/:jobId/proof-of-service', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1380,11 +1384,11 @@ fieldRoutes.post("/jobs/:jobId/proof-of-service", async (c) => {
 	}
 
 	const payload = {
-		jobId: c.req.param("jobId"),
+		jobId: c.req.param('jobId'),
 		...parsed.data,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "proof-of-service", payload)
+		? idempotencyKey(c, 'proof-of-service', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -1398,7 +1402,7 @@ fieldRoutes.post("/jobs/:jobId/proof-of-service", async (c) => {
 	const proof = addProofOfService(payload);
 
 	if (!proof) {
-		return c.json({ error: "Job not found" }, 404);
+		return c.json({ error: 'Job not found' }, 404);
 	}
 
 	const responseBody = { proof };
@@ -1410,12 +1414,12 @@ fieldRoutes.post("/jobs/:jobId/proof-of-service", async (c) => {
 	return c.json(responseBody, 201);
 });
 
-fieldRoutes.post("/jobs/:jobId/intelligence", async (c) => {
+fieldRoutes.post('/jobs/:jobId/intelligence', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1429,17 +1433,17 @@ fieldRoutes.post("/jobs/:jobId/intelligence", async (c) => {
 		return validationError(c, parsed.error.issues);
 	}
 
-	const jobId = c.req.param("jobId");
+	const jobId = c.req.param('jobId');
 	const job = getJobById(jobId);
 
 	if (!job) {
-		return c.json({ error: "Job not found" }, 404);
+		return c.json({ error: 'Job not found' }, 404);
 	}
 
 	let result = null;
 
 	try {
-		const provider = getFieldIntelligenceProvider();
+		const provider = await getFieldIntelligenceProvider();
 		const providerResult = await provider.generateWorkOrderIntelligence({
 			jobId: job.id,
 			title: job.title,
@@ -1459,13 +1463,13 @@ fieldRoutes.post("/jobs/:jobId/intelligence", async (c) => {
 			});
 		}
 	} catch {
-		c.header("x-intelligence-provider-warning", "provider-fallback");
+		c.header('x-intelligence-provider-warning', 'provider-fallback');
 		const auth = getAuth(c);
 		recordResilienceEvent({
 			tenantId: auth.tenantId,
-			type: "intelligence_provider_fallback",
-			service: "field_intelligence",
-			operation: "work_order_intelligence",
+			type: 'intelligence_provider_fallback',
+			service: 'field_intelligence',
+			operation: 'work_order_intelligence',
 		});
 	}
 
@@ -1478,14 +1482,14 @@ fieldRoutes.post("/jobs/:jobId/intelligence", async (c) => {
 	}
 
 	if (!result) {
-		return c.json({ error: "Unable to generate intelligence output" }, 500);
+		return c.json({ error: 'Unable to generate intelligence output' }, 500);
 	}
 
 	const minConfidence = intelligenceGuardrailThreshold();
 	const requiresConfirmation = result.confidence < minConfidence;
 
 	if (requiresConfirmation) {
-		c.header("x-intelligence-guardrail", "recommendation-only");
+		c.header('x-intelligence-guardrail', 'recommendation-only');
 	}
 
 	return c.json({
@@ -1493,17 +1497,17 @@ fieldRoutes.post("/jobs/:jobId/intelligence", async (c) => {
 		guardrail: {
 			minimumConfidence: minConfidence,
 			requiresConfirmation,
-			mode: requiresConfirmation ? "recommendation_only" : "automation_allowed",
+			mode: requiresConfirmation ? 'recommendation_only' : 'automation_allowed',
 		},
 	});
 });
 
-fieldRoutes.post("/jobs/:jobId/assist/briefing", async (c) => {
+fieldRoutes.post('/jobs/:jobId/assist/briefing', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1517,17 +1521,17 @@ fieldRoutes.post("/jobs/:jobId/assist/briefing", async (c) => {
 		return validationError(c, parsed.error.issues);
 	}
 
-	const jobId = c.req.param("jobId");
+	const jobId = c.req.param('jobId');
 	const job = getJobById(jobId);
 
 	if (!job) {
-		return c.json({ error: "Job not found" }, 404);
+		return c.json({ error: 'Job not found' }, 404);
 	}
 
 	let result = null;
 
 	try {
-		const provider = getFieldIntelligenceProvider();
+		const provider = await getFieldIntelligenceProvider();
 		const providerResult = await provider.generateTechnicianAssistBriefing({
 			jobId: job.id,
 			status: job.status,
@@ -1543,13 +1547,13 @@ fieldRoutes.post("/jobs/:jobId/assist/briefing", async (c) => {
 			});
 		}
 	} catch {
-		c.header("x-intelligence-provider-warning", "provider-fallback");
+		c.header('x-intelligence-provider-warning', 'provider-fallback');
 		const auth = getAuth(c);
 		recordResilienceEvent({
 			tenantId: auth.tenantId,
-			type: "intelligence_provider_fallback",
-			service: "field_intelligence",
-			operation: "technician_assist_briefing",
+			type: 'intelligence_provider_fallback',
+			service: 'field_intelligence',
+			operation: 'technician_assist_briefing',
 		});
 	}
 
@@ -1563,20 +1567,20 @@ fieldRoutes.post("/jobs/:jobId/assist/briefing", async (c) => {
 	return c.json({ result });
 });
 
-fieldRoutes.get("/intelligence/history", (c) => {
+fieldRoutes.get('/intelligence/history', (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
-	const limit = parseLimit(c.req.query("limit"), 50, 500);
-	const jobId = c.req.query("jobId");
+	const limit = parseLimit(c.req.query('limit'), 50, 500);
+	const jobId = c.req.query('jobId');
 
 	return c.json({
 		workOrderRuns: getWorkOrderIntelligenceHistory({ limit, jobId }),
@@ -1584,47 +1588,47 @@ fieldRoutes.get("/intelligence/history", (c) => {
 	});
 });
 
-fieldRoutes.get("/intelligence/accuracy", (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.get('/intelligence/accuracy', (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
-	const jobId = c.req.query("jobId");
+	const jobId = c.req.query('jobId');
 	return c.json({ accuracy: getWorkOrderIntelligenceAccuracy({ jobId }) });
 });
 
-fieldRoutes.get("/intelligence/quality-report", (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/intelligence/quality-report', (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
-	const windowHours = parseLimit(c.req.query("windowHours"), 24, 720);
+	const windowHours = parseLimit(c.req.query('windowHours'), 24, 720);
 	return c.json({
 		report: getWorkOrderIntelligenceQualityReport({ windowHours }),
 	});
 });
 
-fieldRoutes.get("/intelligence/drift-alerts", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/intelligence/drift-alerts', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
-	const windowHours = parseLimit(c.req.query("windowHours"), 24, 720);
-	const minSampleCount = parseLimit(c.req.query("minSampleCount"), 3, 1000);
+	const windowHours = parseLimit(c.req.query('windowHours'), 24, 720);
+	const minSampleCount = parseLimit(c.req.query('minSampleCount'), 3, 1000);
 	const maxMaeMinutes = parseFloatEnv(
-		"INTELLIGENCE_DRIFT_MAX_MAE_MINUTES",
+		'INTELLIGENCE_DRIFT_MAX_MAE_MINUTES',
 		35,
 		5,
 		480,
 	);
 	const minWithin15Rate = parseFloatEnv(
-		"INTELLIGENCE_DRIFT_MIN_WITHIN15_RATE",
+		'INTELLIGENCE_DRIFT_MIN_WITHIN15_RATE',
 		0.55,
 		0.05,
 		1,
@@ -1643,9 +1647,9 @@ fieldRoutes.get("/intelligence/drift-alerts", async (c) => {
 });
 
 fieldRoutes.post(
-	"/intelligence/drift-alerts/:alertId/acknowledge",
+	'/intelligence/drift-alerts/:alertId/acknowledge',
 	async (c) => {
-		const forbidden = enforceRole(c, ["manager", "admin"]);
+		const forbidden = enforceRole(c, ['manager', 'admin']);
 
 		if (forbidden) {
 			return forbidden;
@@ -1663,26 +1667,26 @@ fieldRoutes.post(
 		if (Number.isNaN(parsedDueAt.getTime())) {
 			return validationError(c, [
 				{
-					code: "custom",
-					path: ["slaDueAt"],
-					message: "slaDueAt must be a valid ISO date-time",
+					code: 'custom',
+					path: ['slaDueAt'],
+					message: 'slaDueAt must be a valid ISO date-time',
 				},
 			]);
 		}
 
 		const auth = getAuth(c);
-		const alertId = c.req.param("alertId");
+		const alertId = c.req.param('alertId');
 		const candidateAlerts = getWorkOrderIntelligenceDriftAlerts({
-			windowHours: parseLimit(c.req.query("windowHours"), 24, 720),
-			minSampleCount: parseLimit(c.req.query("minSampleCount"), 1, 1000),
+			windowHours: parseLimit(c.req.query('windowHours'), 24, 720),
+			minSampleCount: parseLimit(c.req.query('minSampleCount'), 1, 1000),
 			maxMaeMinutes: parseFloatEnv(
-				"INTELLIGENCE_DRIFT_MAX_MAE_MINUTES",
+				'INTELLIGENCE_DRIFT_MAX_MAE_MINUTES',
 				35,
 				5,
 				480,
 			),
 			minWithin15Rate: parseFloatEnv(
-				"INTELLIGENCE_DRIFT_MIN_WITHIN15_RATE",
+				'INTELLIGENCE_DRIFT_MIN_WITHIN15_RATE',
 				0.55,
 				0.05,
 				1,
@@ -1691,7 +1695,7 @@ fieldRoutes.post(
 		const alert = candidateAlerts.find((item) => item.id === alertId);
 
 		if (!alert) {
-			return c.json({ error: "Drift alert not found" }, 404);
+			return c.json({ error: 'Drift alert not found' }, 404);
 		}
 
 		const actor = parsed.data.actor ?? auth.userId;
@@ -1706,8 +1710,8 @@ fieldRoutes.post(
 
 		await upsertDriftAlertAcknowledgement(auth.tenantId, acknowledgement);
 		await appendIncidentTimelineEvent(auth.tenantId, {
-			type: "drift_alert_acknowledged",
-			severity: alert.severity === "high" ? "warning" : "info",
+			type: 'drift_alert_acknowledged',
+			severity: alert.severity === 'high' ? 'warning' : 'info',
 			message: `Drift alert acknowledged (${alertId}) by ${actor}.`,
 			actor,
 			context: {
@@ -1725,8 +1729,8 @@ fieldRoutes.post(
 	},
 );
 
-fieldRoutes.post("/jobs/:jobId/intelligence/confirm", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/jobs/:jobId/intelligence/confirm', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -1739,13 +1743,13 @@ fieldRoutes.post("/jobs/:jobId/intelligence/confirm", async (c) => {
 		return validationError(c, parsed.error.issues);
 	}
 
-	const jobId = c.req.param("jobId");
+	const jobId = c.req.param('jobId');
 	const run = getWorkOrderIntelligenceHistory({ jobId, limit: 200 }).find(
 		(item) => item.id === parsed.data.runId,
 	);
 
 	if (!run) {
-		return c.json({ error: "Intelligence run not found" }, 404);
+		return c.json({ error: 'Intelligence run not found' }, 404);
 	}
 
 	const minConfidence = intelligenceGuardrailThreshold();
@@ -1765,8 +1769,8 @@ fieldRoutes.post("/jobs/:jobId/intelligence/confirm", async (c) => {
 		},
 	});
 	await appendIncidentTimelineEvent(auth.tenantId, {
-		type: "intelligence_action_confirmed",
-		severity: bypassedGuardrail ? "warning" : "info",
+		type: 'intelligence_action_confirmed',
+		severity: bypassedGuardrail ? 'warning' : 'info',
 		message: `Intelligence action confirmed (${parsed.data.action}) for ${jobId}.`,
 		actor,
 		context: {
@@ -1785,12 +1789,12 @@ fieldRoutes.post("/jobs/:jobId/intelligence/confirm", async (c) => {
 	});
 });
 
-fieldRoutes.post("/jobs/:jobId/start", async (c) => {
+fieldRoutes.post('/jobs/:jobId/start', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1806,12 +1810,12 @@ fieldRoutes.post("/jobs/:jobId/start", async (c) => {
 
 	const auth = getAuth(c);
 	const payload = {
-		jobId: c.req.param("jobId"),
+		jobId: c.req.param('jobId'),
 		...parsed.data,
 		actor: parsed.data.actor ?? auth.userId,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "start-job", payload)
+		? idempotencyKey(c, 'start-job', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -1823,14 +1827,14 @@ fieldRoutes.post("/jobs/:jobId/start", async (c) => {
 	}
 
 	const result = startJob(payload);
-	if (result.started && "job" in result && featureFlags.crmIntegration) {
+	if (result.started && 'job' in result && featureFlags.crmIntegration) {
 		try {
 			const sync = await syncCrmWorkOrderEvent(result.job);
 			if (sync.queued) {
-				c.header("x-integration-outbox", sync.outboxEntryId ?? "queued");
+				c.header('x-integration-outbox', sync.outboxEntryId ?? 'queued');
 			}
 		} catch {
-			c.header("x-integration-warning", "crm-sync-failed");
+			c.header('x-integration-warning', 'crm-sync-failed');
 		}
 	}
 	const status = result.started ? 200 : 409;
@@ -1842,12 +1846,12 @@ fieldRoutes.post("/jobs/:jobId/start", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.post("/jobs/:jobId/complete", async (c) => {
+fieldRoutes.post('/jobs/:jobId/complete', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1863,12 +1867,12 @@ fieldRoutes.post("/jobs/:jobId/complete", async (c) => {
 
 	const auth = getAuth(c);
 	const payload = {
-		jobId: c.req.param("jobId"),
+		jobId: c.req.param('jobId'),
 		...parsed.data,
 		actor: parsed.data.actor ?? auth.userId,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "complete-job", payload)
+		? idempotencyKey(c, 'complete-job', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -1880,14 +1884,14 @@ fieldRoutes.post("/jobs/:jobId/complete", async (c) => {
 	}
 
 	const result = completeJob(payload);
-	if (result.completed && "job" in result && featureFlags.crmIntegration) {
+	if (result.completed && 'job' in result && featureFlags.crmIntegration) {
 		try {
 			const sync = await syncCrmWorkOrderEvent(result.job);
 			if (sync.queued) {
-				c.header("x-integration-outbox", sync.outboxEntryId ?? "queued");
+				c.header('x-integration-outbox', sync.outboxEntryId ?? 'queued');
 			}
 		} catch {
-			c.header("x-integration-warning", "crm-sync-failed");
+			c.header('x-integration-warning', 'crm-sync-failed');
 		}
 	}
 	const status = result.completed ? 200 : 409;
@@ -1899,12 +1903,12 @@ fieldRoutes.post("/jobs/:jobId/complete", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.post("/mobile/sync", async (c) => {
+fieldRoutes.post('/mobile/sync', async (c) => {
 	const forbidden = enforceRole(c, [
-		"technician",
-		"dispatcher",
-		"manager",
-		"admin",
+		'technician',
+		'dispatcher',
+		'manager',
+		'admin',
 	]);
 
 	if (forbidden) {
@@ -1912,7 +1916,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 	}
 
 	if (!featureFlags.mobileSync) {
-		return notEnabled(c, "mobileSync");
+		return notEnabled(c, 'mobileSync');
 	}
 
 	const body = await c.req.json().catch(() => ({}));
@@ -1934,7 +1938,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 
 	for (const operation of parsed.data.operations) {
 		try {
-			if (operation.type === "start_job") {
+			if (operation.type === 'start_job') {
 				const payload = z
 					.object({
 						jobId: z.string().min(1),
@@ -1957,7 +1961,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 				continue;
 			}
 
-			if (operation.type === "complete_job") {
+			if (operation.type === 'complete_job') {
 				const payload = z
 					.object({
 						jobId: z.string().min(1),
@@ -1984,7 +1988,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 				continue;
 			}
 
-			if (operation.type === "update_checklist") {
+			if (operation.type === 'update_checklist') {
 				const payload = z
 					.object({
 						jobId: z.string().min(1),
@@ -2008,12 +2012,12 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 					ok: checklist !== null,
 					status: checklist ? 200 : 404,
 					retryable: false,
-					body: checklist ? { checklist } : { error: "Job not found" },
+					body: checklist ? { checklist } : { error: 'Job not found' },
 				});
 				continue;
 			}
 
-			if (operation.type === "add_proof") {
+			if (operation.type === 'add_proof') {
 				const payload = z
 					.object({
 						jobId: z.string().min(1),
@@ -2032,7 +2036,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 					ok: proof !== null,
 					status: proof ? 201 : 404,
 					retryable: false,
-					body: proof ? { proof } : { error: "Job not found" },
+					body: proof ? { proof } : { error: 'Job not found' },
 				});
 				continue;
 			}
@@ -2043,7 +2047,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 				ok: false,
 				status: 400,
 				retryable: false,
-				body: { error: "Unsupported operation type" },
+				body: { error: 'Unsupported operation type' },
 			});
 		} catch (error) {
 			results.push({
@@ -2052,7 +2056,7 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 				ok: false,
 				status: 400,
 				retryable: false,
-				body: { error: "Invalid operation payload", detail: String(error) },
+				body: { error: 'Invalid operation payload', detail: String(error) },
 			});
 		}
 	}
@@ -2066,12 +2070,12 @@ fieldRoutes.post("/mobile/sync", async (c) => {
 	});
 });
 
-fieldRoutes.get("/alerts/sla-breaches", (c) => {
+fieldRoutes.get('/alerts/sla-breaches', (c) => {
 	return c.json({ breaches: evaluateSlaBreaches() });
 });
 
-fieldRoutes.get("/analytics/kpis", (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/analytics/kpis', (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -2080,19 +2084,19 @@ fieldRoutes.get("/analytics/kpis", (c) => {
 	return c.json({ kpis: getOperationalKpis() });
 });
 
-fieldRoutes.get("/observability/metrics", (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/observability/metrics', (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.observabilityMetrics) {
-		return notEnabled(c, "observabilityMetrics");
+		return notEnabled(c, 'observabilityMetrics');
 	}
 
 	const auth = getAuth(c);
-	const windowMinutes = parseLimit(c.req.query("windowMinutes"), 60, 1440);
+	const windowMinutes = parseLimit(c.req.query('windowMinutes'), 60, 1440);
 	return c.json({
 		metrics: getObservabilitySnapshot({
 			windowMinutes,
@@ -2101,15 +2105,15 @@ fieldRoutes.get("/observability/metrics", (c) => {
 	});
 });
 
-fieldRoutes.post("/maintenance/risk-score", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.post('/maintenance/risk-score', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.predictiveMaintenance) {
-		return notEnabled(c, "predictiveMaintenance");
+		return notEnabled(c, 'predictiveMaintenance');
 	}
 
 	const body = await c.req.json().catch(() => ({}));
@@ -2122,8 +2126,8 @@ fieldRoutes.post("/maintenance/risk-score", async (c) => {
 	return c.json({ result: assessMaintenanceRisk(parsed.data) });
 });
 
-fieldRoutes.post("/jobs/:jobId/manual-override", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/jobs/:jobId/manual-override', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
@@ -2137,13 +2141,13 @@ fieldRoutes.post("/jobs/:jobId/manual-override", async (c) => {
 	}
 
 	const payload = {
-		jobId: c.req.param("jobId"),
+		jobId: c.req.param('jobId'),
 		actor: parsed.data.actor,
 		reason: parsed.data.reason,
 		changes: parsed.data.changes,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "manual-override", payload)
+		? idempotencyKey(c, 'manual-override', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -2164,65 +2168,65 @@ fieldRoutes.post("/jobs/:jobId/manual-override", async (c) => {
 	return c.json(result, status);
 });
 
-fieldRoutes.get("/audit-trail", (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/audit-trail', (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
-	const limit = parseLimit(c.req.query("limit"), 50, 200);
+	const limit = parseLimit(c.req.query('limit'), 50, 200);
 	return c.json({ entries: getAuditTrail(limit) });
 });
 
-fieldRoutes.get("/ops/jobs", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/ops/jobs', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	const auth = getAuth(c);
-	const limit = parseLimit(c.req.query("limit"), 50, 200);
+	const limit = parseLimit(c.req.query('limit'), 50, 200);
 	const jobs = await listBackgroundJobs(limit, auth.tenantId);
 	return c.json({ jobs });
 });
 
-fieldRoutes.get("/ops/jobs/:jobId", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/ops/jobs/:jobId', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	const auth = getAuth(c);
-	const job = await getBackgroundJob(c.req.param("jobId"), auth.tenantId);
+	const job = await getBackgroundJob(c.req.param('jobId'), auth.tenantId);
 
 	if (!job) {
-		return c.json({ error: "Background job not found" }, 404);
+		return c.json({ error: 'Background job not found' }, 404);
 	}
 
 	return c.json({ job });
 });
 
-fieldRoutes.get("/integrations/outbox", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.get('/integrations/outbox', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.integrationOutbox) {
-		return notEnabled(c, "integrationOutbox");
+		return notEnabled(c, 'integrationOutbox');
 	}
 
-	const limit = parseLimit(c.req.query("limit"), 50, 500);
-	const status = c.req.query("status");
+	const limit = parseLimit(c.req.query('limit'), 50, 500);
+	const status = c.req.query('status');
 	const parsedStatus =
-		status === "pending" ||
-		status === "processing" ||
-		status === "delivered" ||
-		status === "dead_letter"
+		status === 'pending' ||
+		status === 'processing' ||
+		status === 'delivered' ||
+		status === 'dead_letter'
 			? status
 			: undefined;
 
@@ -2237,15 +2241,15 @@ fieldRoutes.get("/integrations/outbox", async (c) => {
 	return c.json({ summary, entries });
 });
 
-fieldRoutes.post("/integrations/outbox/flush", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.post('/integrations/outbox/flush', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.integrationOutbox) {
-		return notEnabled(c, "integrationOutbox");
+		return notEnabled(c, 'integrationOutbox');
 	}
 
 	const auth = getAuth(c);
@@ -2263,7 +2267,7 @@ fieldRoutes.post("/integrations/outbox/flush", async (c) => {
 
 	if (parsed.data.async) {
 		const job = await enqueueBackgroundJob({
-			type: "integration_outbox_flush",
+			type: 'integration_outbox_flush',
 			tenantId: auth.tenantId,
 			payload: {
 				maxBatch: parsed.data.maxBatch ?? 25,
@@ -2286,15 +2290,15 @@ fieldRoutes.post("/integrations/outbox/flush", async (c) => {
 	return c.json({ result, summary });
 });
 
-fieldRoutes.post("/integrations/outbox/requeue", async (c) => {
-	const forbidden = enforceRole(c, ["manager", "admin"]);
+fieldRoutes.post('/integrations/outbox/requeue', async (c) => {
+	const forbidden = enforceRole(c, ['manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.integrationOutbox) {
-		return notEnabled(c, "integrationOutbox");
+		return notEnabled(c, 'integrationOutbox');
 	}
 
 	const body = await c.req.json().catch(() => ({}));
@@ -2318,86 +2322,86 @@ fieldRoutes.post("/integrations/outbox/requeue", async (c) => {
 });
 
 fieldRoutes.get(
-	"/integrations/crm/customers/:customerId/context",
+	'/integrations/crm/customers/:customerId/context',
 	async (c) => {
-		const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+		const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 		if (forbidden) {
 			return forbidden;
 		}
 
 		if (!featureFlags.crmIntegration) {
-			return notEnabled(c, "crmIntegration");
+			return notEnabled(c, 'crmIntegration');
 		}
 
 		let context = null;
 		try {
-			context = await getCustomerContext(c.req.param("customerId"));
+			context = await getCustomerContext(c.req.param('customerId'));
 		} catch (error) {
-			return integrationUnavailable(c, "crm", error);
+			return integrationUnavailable(c, 'crm', error);
 		}
 
 		if (!context) {
-			return c.json({ error: "Customer context not found" }, 404);
+			return c.json({ error: 'Customer context not found' }, 404);
 		}
 
 		return c.json({ context });
 	},
 );
 
-fieldRoutes.get("/integrations/invoicing/invoices", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.get('/integrations/invoicing/invoices', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.invoicingIntegration) {
-		return notEnabled(c, "invoicingIntegration");
+		return notEnabled(c, 'invoicingIntegration');
 	}
 
 	try {
 		const invoices = await listInvoices();
 		return c.json({ invoices });
 	} catch (error) {
-		return integrationUnavailable(c, "invoicing", error);
+		return integrationUnavailable(c, 'invoicing', error);
 	}
 });
 
-fieldRoutes.get("/integrations/invoicing/invoices/:invoiceId", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.get('/integrations/invoicing/invoices/:invoiceId', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.invoicingIntegration) {
-		return notEnabled(c, "invoicingIntegration");
+		return notEnabled(c, 'invoicingIntegration');
 	}
 
 	let invoice = null;
 	try {
-		invoice = await getInvoice(c.req.param("invoiceId"));
+		invoice = await getInvoice(c.req.param('invoiceId'));
 	} catch (error) {
-		return integrationUnavailable(c, "invoicing", error);
+		return integrationUnavailable(c, 'invoicing', error);
 	}
 
 	if (!invoice) {
-		return c.json({ error: "Invoice not found" }, 404);
+		return c.json({ error: 'Invoice not found' }, 404);
 	}
 
 	return c.json({ invoice });
 });
 
-fieldRoutes.post("/integrations/invoicing/jobs/:jobId/invoice", async (c) => {
-	const forbidden = enforceRole(c, ["dispatcher", "manager", "admin"]);
+fieldRoutes.post('/integrations/invoicing/jobs/:jobId/invoice', async (c) => {
+	const forbidden = enforceRole(c, ['dispatcher', 'manager', 'admin']);
 
 	if (forbidden) {
 		return forbidden;
 	}
 
 	if (!featureFlags.invoicingIntegration) {
-		return notEnabled(c, "invoicingIntegration");
+		return notEnabled(c, 'invoicingIntegration');
 	}
 
 	const body = await c.req.json().catch(() => ({}));
@@ -2407,10 +2411,10 @@ fieldRoutes.post("/integrations/invoicing/jobs/:jobId/invoice", async (c) => {
 		return validationError(c, parsed.error.issues);
 	}
 
-	const job = getJobById(c.req.param("jobId"));
+	const job = getJobById(c.req.param('jobId'));
 
 	if (!job) {
-		return c.json({ error: "Job not found" }, 404);
+		return c.json({ error: 'Job not found' }, 404);
 	}
 
 	const payload = {
@@ -2419,7 +2423,7 @@ fieldRoutes.post("/integrations/invoicing/jobs/:jobId/invoice", async (c) => {
 		calloutFeeCents: parsed.data.calloutFeeCents,
 	};
 	const idempotencyScope = featureFlags.idempotency
-		? idempotencyKey(c, "create-invoice", payload)
+		? idempotencyKey(c, 'create-invoice', payload)
 		: null;
 
 	if (idempotencyScope) {
@@ -2434,7 +2438,7 @@ fieldRoutes.post("/integrations/invoicing/jobs/:jobId/invoice", async (c) => {
 	try {
 		result = await createInvoiceFromCompletedJob(payload);
 	} catch (error) {
-		return integrationUnavailable(c, "invoicing", error);
+		return integrationUnavailable(c, 'invoicing', error);
 	}
 
 	if (!result.ok) {
