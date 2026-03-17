@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
 	loadPersistedRuntimeConfig,
-	persistRuntimeConfig,
 	type PersistedRuntimeConfig,
+	persistRuntimeConfig,
 } from '../src/mobile-storage';
 
 // Mock AsyncStorage
@@ -25,7 +25,9 @@ const defaultConfig: PersistedRuntimeConfig = {
 describe('mobile-storage', () => {
 	describe('loadPersistedRuntimeConfig', () => {
 		it('should return fallbacks when no stored config exists', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce(null);
 
 			const result = await loadPersistedRuntimeConfig(defaultConfig);
@@ -34,8 +36,12 @@ describe('mobile-storage', () => {
 		});
 
 		it('should return fallbacks when stored config is invalid JSON', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
-			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce('invalid-json');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
+			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce(
+				'invalid-json',
+			);
 
 			const result = await loadPersistedRuntimeConfig(defaultConfig);
 
@@ -43,7 +49,9 @@ describe('mobile-storage', () => {
 		});
 
 		it('should return normalized config when valid config exists', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce(
 				JSON.stringify({
 					baseUrl: 'http://custom.example.com',
@@ -64,7 +72,9 @@ describe('mobile-storage', () => {
 		});
 
 		it('should use fallbacks for missing fields', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce(
 				JSON.stringify({
 					baseUrl: 'http://partial.example.com',
@@ -79,7 +89,9 @@ describe('mobile-storage', () => {
 		});
 
 		it('should use fallbacks for invalid field values', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce(
 				JSON.stringify({
 					baseUrl: '', // empty string should use fallback
@@ -94,7 +106,9 @@ describe('mobile-storage', () => {
 		});
 
 		it('should handle null expoPushToken', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.getItem).mockResolvedValueOnce(
 				JSON.stringify({
 					expoPushToken: null,
@@ -109,7 +123,9 @@ describe('mobile-storage', () => {
 
 	describe('persistRuntimeConfig', () => {
 		it('should store config as JSON string', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.setItem).mockResolvedValueOnce();
 
 			await persistRuntimeConfig(defaultConfig);
@@ -121,7 +137,9 @@ describe('mobile-storage', () => {
 		});
 
 		it('should store custom config correctly', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			vi.mocked(AsyncStorage.default.setItem).mockResolvedValueOnce();
 
 			const customConfig: PersistedRuntimeConfig = {

@@ -3,7 +3,6 @@ import {
 	registerForPushNotificationsAsync,
 	scheduleTestNotificationAsync,
 	subscribeToNotifications,
-	type NotificationRegistrationResult,
 } from '../src/notifications';
 
 // Mock expo modules
@@ -44,10 +43,12 @@ describe('notifications', () => {
 			const Notifications = await import('expo-notifications');
 			vi.mocked(Notifications.getPermissionsAsync).mockResolvedValueOnce({
 				status: 'denied',
-			} as any);
+			} as unknown as Parameters<typeof Notifications.getPermissionsAsync>[0]);
 			vi.mocked(Notifications.requestPermissionsAsync).mockResolvedValueOnce({
 				status: 'denied',
-			} as any);
+			} as unknown as Parameters<
+				typeof Notifications.requestPermissionsAsync
+			>[0]);
 
 			const result = await registerForPushNotificationsAsync();
 
@@ -60,10 +61,10 @@ describe('notifications', () => {
 			const Notifications = await import('expo-notifications');
 			vi.mocked(Notifications.getPermissionsAsync).mockResolvedValueOnce({
 				status: 'granted',
-			} as any);
+			} as unknown as Parameters<typeof Notifications.getPermissionsAsync>[0]);
 			vi.mocked(Notifications.getExpoPushTokenAsync).mockResolvedValueOnce({
 				data: 'ExponentPushToken[test-token-123]',
-			} as any);
+			} as unknown as ReturnType<typeof Notifications.getExpoPushTokenAsync>);
 
 			const result = await registerForPushNotificationsAsync();
 
@@ -77,13 +78,15 @@ describe('notifications', () => {
 			const Notifications = await import('expo-notifications');
 			vi.mocked(Notifications.getPermissionsAsync).mockResolvedValueOnce({
 				status: 'undetermined',
-			} as any);
+			} as unknown as Parameters<typeof Notifications.getPermissionsAsync>[0]);
 			vi.mocked(Notifications.requestPermissionsAsync).mockResolvedValueOnce({
 				status: 'granted',
-			} as any);
+			} as unknown as Parameters<
+				typeof Notifications.requestPermissionsAsync
+			>[0]);
 			vi.mocked(Notifications.getExpoPushTokenAsync).mockResolvedValueOnce({
 				data: 'ExponentPushToken[new-token]',
-			} as any);
+			} as unknown as ReturnType<typeof Notifications.getExpoPushTokenAsync>);
 
 			const result = await registerForPushNotificationsAsync();
 
@@ -116,10 +119,10 @@ describe('notifications', () => {
 
 	describe('subscribeToNotifications', () => {
 		it('should return unsubscribe function', () => {
-			const onReceive = vi.fn();
-			const onRespond = vi.fn();
+			const _onReceive = vi.fn();
+			const _onRespond = vi.fn();
 
-			const Notifications = import('expo-notifications');
+			const _Notifications = import('expo-notifications');
 			// The subscribeToNotifications returns a cleanup function
 
 			// This test just verifies the function can be called

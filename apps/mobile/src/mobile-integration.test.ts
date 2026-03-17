@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock AsyncStorage before importing the modules
 vi.mock('@react-native-async-storage/async-storage', () => ({
@@ -74,7 +74,9 @@ describe('Mobile App Integration', () => {
 		});
 
 		it('should load config and prepare for notifications', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			const Notifications = await import('expo-notifications');
 
 			// Setup mocks
@@ -90,15 +92,19 @@ describe('Mobile App Integration', () => {
 
 			vi.mocked(Notifications.getPermissionsAsync).mockResolvedValue({
 				status: 'granted',
-			} as any);
+			} as unknown as Parameters<typeof Notifications.getPermissionsAsync>[0]);
 
 			vi.mocked(Notifications.getExpoPushTokenAsync).mockResolvedValue({
 				data: 'ExponentPushToken[test-integration-token]',
-			} as any);
+			} as unknown as ReturnType<typeof Notifications.getExpoPushTokenAsync>);
 
 			// Import after setting up mocks
-			const { loadPersistedRuntimeConfig } = await import('../src/mobile-storage');
-			const { registerForPushNotificationsAsync } = await import('../src/notifications');
+			const { loadPersistedRuntimeConfig } = await import(
+				'../src/mobile-storage'
+			);
+			const { registerForPushNotificationsAsync } = await import(
+				'../src/notifications'
+			);
 
 			// Execute the flow
 			const config = await loadPersistedRuntimeConfig({
@@ -115,11 +121,15 @@ describe('Mobile App Integration', () => {
 			expect(config.baseUrl).toBe('http://192.168.1.100:3008');
 			expect(config.authToken).toBe('Bearer manager:mobile-ops:tenant-mobile');
 			expect(notificationResult.ok).toBe(true);
-			expect(notificationResult.token).toBe('ExponentPushToken[test-integration-token]');
+			expect(notificationResult.token).toBe(
+				'ExponentPushToken[test-integration-token]',
+			);
 		});
 
 		it('should persist config changes correctly', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			const { persistRuntimeConfig } = await import('../src/mobile-storage');
 
 			vi.mocked(AsyncStorage.default.setItem).mockResolvedValue();
@@ -143,12 +153,16 @@ describe('Mobile App Integration', () => {
 
 			vi.mocked(Notifications.getPermissionsAsync).mockResolvedValue({
 				status: 'denied',
-			} as any);
+			} as unknown as Parameters<typeof Notifications.getPermissionsAsync>[0]);
 			vi.mocked(Notifications.requestPermissionsAsync).mockResolvedValue({
 				status: 'denied',
-			} as any);
+			} as unknown as Parameters<
+				typeof Notifications.requestPermissionsAsync
+			>[0]);
 
-			const { registerForPushNotificationsAsync } = await import('../src/notifications');
+			const { registerForPushNotificationsAsync } = await import(
+				'../src/notifications'
+			);
 
 			const result = await registerForPushNotificationsAsync();
 
@@ -160,13 +174,15 @@ describe('Mobile App Integration', () => {
 
 		it('should schedule test notification successfully', async () => {
 			const Notifications = await import('expo-notifications');
-			const { scheduleTestNotificationAsync } = await import('../src/notifications');
+			const { scheduleTestNotificationAsync } = await import(
+				'../src/notifications'
+			);
 
 			vi.mocked(Notifications.scheduleNotificationAsync).mockResolvedValue(
 				'test-notification-id',
 			);
 
-			const notificationId = await scheduleTestNotificationAsync();
+			const _notificationId = await scheduleTestNotificationAsync();
 
 			expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith({
 				content: {
@@ -186,7 +202,9 @@ describe('Mobile App Integration', () => {
 
 	describe('Tab Navigation State', () => {
 		it('should persist and restore active tab state', async () => {
-			const AsyncStorage = await import('@react-native-async-storage/async-storage');
+			const AsyncStorage = await import(
+				'@react-native-async-storage/async-storage'
+			);
 			const { loadPersistedRuntimeConfig, persistRuntimeConfig } = await import(
 				'../src/mobile-storage'
 			);
