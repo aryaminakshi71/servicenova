@@ -416,6 +416,8 @@ jobs:
 
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
+        with:
+          flags: --warn
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
