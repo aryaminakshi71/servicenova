@@ -1,16 +1,26 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "types": ["vite/client", "node"],
-    "skipLibCheck": true
-  },
-  "include": ["src", "vite.config.ts", "vitest.config.ts", "drizzle.config.ts"]
+	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"jsx": "react-jsx",
+		"strict": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"types": ["vite/client", "node"],
+		"skipLibCheck": true,
+		"paths": {
+			"@servicenova-ai/auth": ["./packages/auth/src/index.ts"],
+			"@servicenova-ai/*": ["./packages/*/src"]
+		}
+	},
+	"include": [
+		"src",
+		"vite.config.ts",
+		"vitest.config.ts",
+		"drizzle.config.ts",
+		"packages"
+	]
 }

@@ -1,4 +1,4 @@
-import { nowIso, randomUuid } from "./test-controls";
+import { nowIso, randomUuid } from './test-controls';
 
 export type DashboardOnboardingState = {
 	selectedJob: boolean;
@@ -28,7 +28,7 @@ export type DriftAlertAcknowledgement = {
 	note: string | null;
 };
 
-export type IncidentTimelineSeverity = "info" | "warning" | "critical";
+export type IncidentTimelineSeverity = 'info' | 'warning' | 'critical';
 
 export type IncidentTimelineEvent = {
 	id: string;
@@ -42,7 +42,7 @@ export type IncidentTimelineEvent = {
 
 export type IncidentTimelineEventInput = Omit<
 	IncidentTimelineEvent,
-	"id" | "timestamp"
+	'id' | 'timestamp'
 > & {
 	timestamp?: string;
 };
@@ -156,7 +156,7 @@ function createInMemoryFieldDashboardStateStore(): FieldDashboardStateStore {
 }
 
 const isTestRuntime =
-	process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+	process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 
 let fieldDashboardStateStore: FieldDashboardStateStore =
 	createInMemoryFieldDashboardStateStore();
@@ -228,7 +228,7 @@ export async function getDashboardOnboardingState(
 	userId: string,
 ): Promise<DashboardOnboardingState> {
 	const existing = await safeRead<DashboardOnboardingState | null>(
-		"get_onboarding",
+		'get_onboarding',
 		null,
 		(store) => store.getOnboarding({ tenantId, userId }),
 	);
@@ -238,7 +238,7 @@ export async function getDashboardOnboardingState(
 	}
 
 	const created = createDefaultOnboardingState(userId);
-	await safeWrite("upsert_onboarding_on_read", (store) =>
+	await safeWrite('upsert_onboarding_on_read', (store) =>
 		store.upsertOnboarding({
 			tenantId,
 			userId,
@@ -266,7 +266,7 @@ export async function updateDashboardOnboardingState(
 		updatedBy: actor,
 	};
 
-	await safeWrite("upsert_onboarding", (store) =>
+	await safeWrite('upsert_onboarding', (store) =>
 		store.upsertOnboarding({
 			tenantId,
 			userId,
@@ -281,7 +281,7 @@ export async function getDriftAlertAcknowledgement(
 	alertId: string,
 ): Promise<DriftAlertAcknowledgement | null> {
 	return safeRead<DriftAlertAcknowledgement | null>(
-		"get_drift_acknowledgement",
+		'get_drift_acknowledgement',
 		null,
 		(store) => store.getDriftAcknowledgement({ tenantId, alertId }),
 	);
@@ -291,7 +291,7 @@ export async function upsertDriftAlertAcknowledgement(
 	tenantId: string,
 	acknowledgement: DriftAlertAcknowledgement,
 ) {
-	await safeWrite("upsert_drift_acknowledgement", (store) =>
+	await safeWrite('upsert_drift_acknowledgement', (store) =>
 		store.upsertDriftAcknowledgement({ tenantId, acknowledgement }),
 	);
 }
@@ -301,7 +301,7 @@ export async function listIncidentTimelineEvents(
 	limit = 50,
 ): Promise<IncidentTimelineEvent[]> {
 	return safeRead<IncidentTimelineEvent[]>(
-		"list_incident_timeline",
+		'list_incident_timeline',
 		[],
 		(store) =>
 			store.listIncidentTimeline({
@@ -326,7 +326,7 @@ export async function appendIncidentTimelineEvent(
 		context: input.context,
 	};
 
-	await safeWrite("append_incident", (store) =>
+	await safeWrite('append_incident', (store) =>
 		store.appendIncident({
 			tenantId,
 			event,

@@ -1,0 +1,57 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"incidents": {
+			"items": {
+				"additionalProperties": false,
+				"properties": {
+					"actor": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"context": {
+						"additionalProperties": {},
+						"propertyNames": {
+							"type": "string"
+						},
+						"type": "object"
+					},
+					"id": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"message": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"severity": {
+						"enum": ["info", "warning", "critical"],
+						"type": "string"
+					},
+					"timestamp": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"type": {
+						"minLength": 1,
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"type",
+					"severity",
+					"message",
+					"timestamp",
+					"actor",
+					"context"
+				],
+				"type": "object"
+			},
+			"type": "array"
+		}
+	},
+	"required": ["incidents"],
+	"type": "object"
+}

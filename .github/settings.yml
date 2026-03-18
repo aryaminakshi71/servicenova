@@ -1,0 +1,39 @@
+branches:
+  - name: main
+    protection:
+      enforce_admins: true
+      required_status_checks:
+        strict: true
+        contexts:
+          - CI / lint_format
+          - CI / typecheck
+          - CI / branch_protection_policy
+          - CI / unit_api
+          - CI / security_gate
+          - CI / migration_rehearsal
+          - CI / e2e
+          - CI / performance_gate
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
+      restrictions: null
+  - name: master
+    protection:
+      enforce_admins: true
+      required_status_checks:
+        strict: true
+        contexts:
+          - CI / lint_format
+          - CI / typecheck
+          - CI / branch_protection_policy
+          - CI / unit_api
+          - CI / security_gate
+          - CI / migration_rehearsal
+          - CI / e2e
+          - CI / performance_gate
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
+      restrictions: null

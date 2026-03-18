@@ -1,0 +1,40 @@
+{
+	"branches": [
+		{
+			"name": "main",
+			"requiredApprovals": 1,
+			"dismissStaleReviews": true,
+			"requireCodeOwnerReviews": false,
+			"enforceAdmins": true,
+			"strictStatusChecks": true,
+			"requiredChecks": [
+				"CI / lint_format",
+				"CI / typecheck",
+				"CI / branch_protection_policy",
+				"CI / unit_api",
+				"CI / security_gate",
+				"CI / migration_rehearsal",
+				"CI / e2e",
+				"CI / performance_gate"
+			]
+		},
+		{
+			"name": "master",
+			"requiredApprovals": 1,
+			"dismissStaleReviews": true,
+			"requireCodeOwnerReviews": false,
+			"enforceAdmins": true,
+			"strictStatusChecks": true,
+			"requiredChecks": [
+				"CI / lint_format",
+				"CI / typecheck",
+				"CI / branch_protection_policy",
+				"CI / unit_api",
+				"CI / security_gate",
+				"CI / migration_rehearsal",
+				"CI / e2e",
+				"CI / performance_gate"
+			]
+		}
+	]
+}

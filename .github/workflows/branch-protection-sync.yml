@@ -1,0 +1,38 @@
+name: Branch Protection Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - ".github/ci/branch-protection-policy.json"
+      - ".github/settings.yml"
+      - ".github/workflows/ci.yml"
+      - "scripts/ci/apply-branch-protection.mjs"
+      - "scripts/ci/verify-branch-protection-policy.mjs"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure Admin Token
+        run: |
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "REPO_ADMIN_TOKEN secret is required to sync branch protection settings."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+
+      - name: Validate Policy
+        run: node scripts/ci/verify-branch-protection-policy.mjs
+
+      - name: Apply Branch Protection
+        run: node scripts/ci/apply-branch-protection.mjs
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}

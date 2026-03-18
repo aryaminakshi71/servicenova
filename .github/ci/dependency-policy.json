@@ -1,0 +1,14 @@
+{
+	"blockedPackages": ["event-stream", "flatmap-stream"],
+	"blockedVersionPatterns": [
+		"*",
+		"latest",
+		"workspace:",
+		"file:",
+		"link:",
+		"github:",
+		"git+",
+		"http:",
+		"https:"
+	]
+}

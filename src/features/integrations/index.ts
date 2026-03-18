@@ -1,2 +1,2 @@
-export * from "./service";
-export * from "./adapters";
+export * from './adapters';
+export * from './service';

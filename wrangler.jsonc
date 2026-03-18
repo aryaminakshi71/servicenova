@@ -1,9 +1,46 @@
 {
-  "name": "servicenova-ai",
-  "compatibility_date": "2026-02-12",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "src/worker.ts",
-  "dev": {
-    "port": 3013
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "servicenova-ai",
+	"main": "src/worker.ts",
+	"compatibility_date": "2026-02-12",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"nodejs_compat_populate_process_env"
+	],
+	"assets": {
+		"binding": "ASSETS"
+	},
+	"vars": {
+		"NODE_ENV": "development",
+		"VITE_PUBLIC_SITE_URL": "http://localhost:3008"
+	},
+	"routes": [
+		{
+			"pattern": "servicenova.aryaminakshi.workers.dev",
+			"zone_name": "aryaminakshi.workers.dev"
+		}
+	],
+	"hyperdrive": [
+		{
+			"binding": "DATABASE",
+			"id": "placeholder-create-hyperdrive-first",
+			"localConnectionString": "postgresql://postgres:postgres@localhost:5432/servicenova"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "placeholder-kv-id"
+		}
+	],
+	"upstash_redis": [
+		{
+			"binding": "REDIS",
+			"rest_api_url": "https://placeholder.upstash.io",
+			"rest_api_token": "placeholder-token"
+		}
+	],
+	"dev": {
+		"port": 3008
+	}
 }

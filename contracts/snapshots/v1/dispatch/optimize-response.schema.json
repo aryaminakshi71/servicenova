@@ -1,0 +1,36 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"assignments": {
+			"items": {
+				"additionalProperties": false,
+				"properties": {
+					"jobId": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"toTechnicianId": {
+						"minLength": 1,
+						"type": "string"
+					}
+				},
+				"required": ["jobId", "toTechnicianId"],
+				"type": "object"
+			},
+			"type": "array"
+		},
+		"totalCandidateJobs": {
+			"type": "number"
+		},
+		"unassignedJobIds": {
+			"items": {
+				"minLength": 1,
+				"type": "string"
+			},
+			"type": "array"
+		}
+	},
+	"required": ["totalCandidateJobs", "assignments", "unassignedJobIds"],
+	"type": "object"
+}

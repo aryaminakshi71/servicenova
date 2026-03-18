@@ -1,16 +1,16 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
 	fieldDashboardOnboardingStates,
 	fieldDriftAlertAcknowledgements,
 	fieldIncidentTimeline,
-} from "../../../drizzle/schema";
+} from '../../../drizzle/schema';
 import type {
 	DashboardOnboardingState,
 	DriftAlertAcknowledgement,
 	FieldDashboardStateStore,
 	IncidentTimelineEvent,
-} from "../field-dashboard-state";
-import { withDbSpan } from "./db-tracing";
+} from '../field-dashboard-state';
+import { withDbSpan } from './db-tracing';
 
 type DrizzleDb = {
 	select?: (...args: unknown[]) => unknown;
@@ -26,11 +26,11 @@ type DrizzleDb = {
 };
 
 function normalizeTenantId(value: string | null | undefined) {
-	return value?.trim() || "default";
+	return value?.trim() || 'default';
 }
 
 function toIso(value: unknown) {
-	if (typeof value === "string") {
+	if (typeof value === 'string') {
 		return value;
 	}
 	if (value instanceof Date) {
@@ -66,8 +66,8 @@ function toDriftAcknowledgement(
 ): DriftAlertAcknowledgement {
 	return {
 		alertId: String(row.alertId ?? row.alert_id ?? fallbackAlertId),
-		owner: String(row.owner ?? ""),
-		acknowledgedBy: String(row.acknowledgedBy ?? row.acknowledged_by ?? ""),
+		owner: String(row.owner ?? ''),
+		acknowledgedBy: String(row.acknowledgedBy ?? row.acknowledged_by ?? ''),
 		acknowledgedAt: toIso(row.acknowledgedAt ?? row.acknowledged_at),
 		slaDueAt: toIso(row.slaDueAt ?? row.sla_due_at),
 		note: (row.note ?? null) as string | null,
@@ -80,12 +80,12 @@ function toIncidentEvent(row: Record<string, unknown>): IncidentTimelineEvent {
 	return {
 		id: String(row.id),
 		type: String(row.type),
-		severity: String(row.severity) as IncidentTimelineEvent["severity"],
+		severity: String(row.severity) as IncidentTimelineEvent['severity'],
 		message: String(row.message),
 		timestamp: toIso(row.occurredAt ?? row.occurred_at ?? row.timestamp),
 		actor: String(row.actor),
 		context:
-			typeof context === "object" && context !== null
+			typeof context === 'object' && context !== null
 				? (context as Record<string, unknown>)
 				: {},
 	};
@@ -112,8 +112,8 @@ export class DrizzleFieldDashboardStateRepository
 		};
 
 		return withDbSpan(
-			"field_dashboard.onboarding.get",
-			{ tenantId, entity: "field_dashboard_onboarding_states" },
+			'field_dashboard.onboarding.get',
+			{ tenantId, entity: 'field_dashboard_onboarding_states' },
 			async () => {
 				const rows = await dbAny
 					.select()
@@ -142,8 +142,8 @@ export class DrizzleFieldDashboardStateRepository
 		const tenantId = normalizeTenantId(input.tenantId);
 
 		await withDbSpan(
-			"field_dashboard.onboarding.upsert",
-			{ tenantId, entity: "field_dashboard_onboarding_states" },
+			'field_dashboard.onboarding.upsert',
+			{ tenantId, entity: 'field_dashboard_onboarding_states' },
 			async () => {
 				const query = this.db.insert(fieldDashboardOnboardingStates).values({
 					tenantId,
@@ -199,8 +199,8 @@ export class DrizzleFieldDashboardStateRepository
 		};
 
 		return withDbSpan(
-			"field_dashboard.drift_ack.get",
-			{ tenantId, entity: "field_drift_alert_acknowledgements" },
+			'field_dashboard.drift_ack.get',
+			{ tenantId, entity: 'field_drift_alert_acknowledgements' },
 			async () => {
 				const rows = await dbAny
 					.select()
@@ -229,8 +229,8 @@ export class DrizzleFieldDashboardStateRepository
 		const acknowledgement = input.acknowledgement;
 
 		await withDbSpan(
-			"field_dashboard.drift_ack.upsert",
-			{ tenantId, entity: "field_drift_alert_acknowledgements" },
+			'field_dashboard.drift_ack.upsert',
+			{ tenantId, entity: 'field_drift_alert_acknowledgements' },
 			async () => {
 				const query = this.db.insert(fieldDriftAlertAcknowledgements).values({
 					tenantId,
@@ -286,8 +286,8 @@ export class DrizzleFieldDashboardStateRepository
 		};
 
 		return withDbSpan(
-			"field_dashboard.incident.list",
-			{ tenantId, entity: "field_incident_timeline" },
+			'field_dashboard.incident.list',
+			{ tenantId, entity: 'field_incident_timeline' },
 			async () => {
 				const rows = await dbAny
 					.select()
@@ -315,8 +315,8 @@ export class DrizzleFieldDashboardStateRepository
 		const select = this.db.select;
 
 		await withDbSpan(
-			"field_dashboard.incident.append",
-			{ tenantId, entity: "field_incident_timeline" },
+			'field_dashboard.incident.append',
+			{ tenantId, entity: 'field_incident_timeline' },
 			async () => {
 				const insert = this.db.insert(fieldIncidentTimeline).values({
 					id: input.event.id,
@@ -379,8 +379,8 @@ export class DrizzleFieldDashboardStateRepository
 
 	async resetForTests() {
 		await withDbSpan(
-			"field_dashboard.reset_for_tests",
-			{ entity: "field_dashboard" },
+			'field_dashboard.reset_for_tests',
+			{ entity: 'field_dashboard' },
 			async () => {
 				await this.db.delete(fieldDashboardOnboardingStates).where(sql`true`);
 				await this.db.delete(fieldDriftAlertAcknowledgements).where(sql`true`);

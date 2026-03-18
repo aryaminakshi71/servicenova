@@ -1,0 +1,88 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Application base URL for post-deploy canary"
+        required: false
+        type: string
+      auth_token:
+        description: "Optional bearer token for canary API calls"
+        required: false
+        type: string
+      deploy_webhook_url:
+        description: "Optional deployment webhook URL"
+        required: false
+        type: string
+      rollout_webhook_url:
+        description: "Optional progressive rollout webhook URL"
+        required: false
+        type: string
+      rollback_webhook_url:
+        description: "Optional rollback webhook URL"
+        required: false
+        type: string
+      phases:
+        description: "Comma-separated progressive rollout phases"
+        required: false
+        type: string
+        default: "10,25,50,100"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      base_url: ${{ steps.config.outputs.base_url }}
+      phases: ${{ steps.config.outputs.phases }}
+      rollout_webhook_url: ${{ steps.config.outputs.rollout_webhook_url }}
+      rollback_webhook_url: ${{ steps.config.outputs.rollback_webhook_url }}
+      deploy_webhook_url: ${{ steps.config.outputs.deploy_webhook_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve Deployment Config
+        id: config
+        run: |
+          set -euo pipefail
+          base_url="${{ github.event.inputs.base_url || vars.PRODUCTION_BASE_URL || '' }}"
+          phases="${{ github.event.inputs.phases || vars.CANARY_PHASES || '10,25,50,100' }}"
+          rollout_webhook_url="${{ github.event.inputs.rollout_webhook_url || vars.ROLLOUT_WEBHOOK_URL || '' }}"
+          rollback_webhook_url="${{ github.event.inputs.rollback_webhook_url || vars.ROLLBACK_WEBHOOK_URL || '' }}"
+          deploy_webhook_url="${{ github.event.inputs.deploy_webhook_url || vars.DEPLOY_WEBHOOK_URL || '' }}"
+
+          {
+            echo "base_url=$base_url"
+            echo "phases=$phases"
+            echo "rollout_webhook_url=$rollout_webhook_url"
+            echo "rollback_webhook_url=$rollback_webhook_url"
+            echo "deploy_webhook_url=$deploy_webhook_url"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Application
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ steps.config.outputs.deploy_webhook_url }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${DEPLOY_WEBHOOK_URL:-}" ]]; then
+            echo "[deploy] Triggering deployment webhook..."
+            curl -fsS -X POST "$DEPLOY_WEBHOOK_URL" \
+              -H 'content-type: application/json' \
+              -d '{"workflow":"Deploy","source":"github-actions"}'
+          else
+            echo "[deploy] No deploy webhook configured. This workflow expects platform deployment to occur externally."
+          fi
+
+  post_deploy_canary:
+    needs: deploy
+    if: needs.deploy.outputs.base_url != ''
+    uses: ./.github/workflows/post-deploy-canary.yml
+    with:
+      base_url: ${{ needs.deploy.outputs.base_url }}
+      auth_token: ${{ github.event.inputs.auth_token || secrets.CANARY_AUTH_TOKEN || '' }}
+      rollout_webhook_url: ${{ needs.deploy.outputs.rollout_webhook_url }}
+      rollback_webhook_url: ${{ needs.deploy.outputs.rollback_webhook_url }}
+      phases: ${{ needs.deploy.outputs.phases }}

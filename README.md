@@ -141,6 +141,7 @@ Field service AI platform for dispatch, assignment, and operational optimization
 - `GET /api/field/intelligence/accuracy`
 - `GET /api/field/intelligence/quality-report`
 - `GET /api/field/intelligence/drift-alerts`
+- `POST /api/field/intelligence/drift-alerts/:alertId/acknowledge`
 - `POST /api/field/mobile/sync`
 - `POST /api/field/jobs/:jobId/start`
 - `POST /api/field/jobs/:jobId/complete`
@@ -151,6 +152,10 @@ Field service AI platform for dispatch, assignment, and operational optimization
 - `POST /api/field/jobs/:jobId/manual-override`
 - `GET /api/field/audit-trail`
 - `GET /api/field/dispatch-board/stream`
+- `GET /api/field/dashboard/onboarding`
+- `POST /api/field/dashboard/onboarding`
+- `GET /api/field/ops/incidents`
+- `GET /api/field/ops/incidents/stream`
 - `GET /api/field/integrations/crm/customers/:customerId/context`
 - `GET /api/field/integrations/invoicing/invoices`
 - `GET /api/field/integrations/invoicing/invoices/:invoiceId`

@@ -1,0 +1,56 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"acknowledged": {
+			"const": true,
+			"type": "boolean"
+		},
+		"acknowledgement": {
+			"additionalProperties": false,
+			"properties": {
+				"acknowledgedAt": {
+					"minLength": 1,
+					"type": "string"
+				},
+				"acknowledgedBy": {
+					"minLength": 1,
+					"type": "string"
+				},
+				"alertId": {
+					"minLength": 1,
+					"type": "string"
+				},
+				"note": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					]
+				},
+				"owner": {
+					"minLength": 1,
+					"type": "string"
+				},
+				"slaDueAt": {
+					"minLength": 1,
+					"type": "string"
+				}
+			},
+			"required": [
+				"alertId",
+				"owner",
+				"acknowledgedBy",
+				"acknowledgedAt",
+				"slaDueAt",
+				"note"
+			],
+			"type": "object"
+		}
+	},
+	"required": ["acknowledged", "acknowledgement"],
+	"type": "object"
+}

@@ -1,0 +1,68 @@
+{
+	"consumer": "dispatch-dashboard-web",
+	"provider": "servicenova-ai",
+	"version": "v1",
+	"interactions": [
+		{
+			"name": "health",
+			"method": "GET",
+			"path": "/api/health",
+			"expectStatus": 200,
+			"schema": "health"
+		},
+		{
+			"name": "dispatch-optimize",
+			"method": "POST",
+			"path": "/api/field/dispatch/optimize",
+			"headers": {
+				"authorization": "Bearer manager:consumer-contract"
+			},
+			"body": {
+				"includeAssigned": true,
+				"reason": "consumer-contract"
+			},
+			"expectStatus": 200,
+			"schema": "dispatch-optimize"
+		},
+		{
+			"name": "observability-metrics",
+			"method": "GET",
+			"path": "/api/field/observability/metrics?windowMinutes=60",
+			"headers": {
+				"authorization": "Bearer manager:consumer-contract"
+			},
+			"expectStatus": 200,
+			"schema": "observability-metrics"
+		},
+		{
+			"name": "dashboard-onboarding",
+			"method": "GET",
+			"path": "/api/field/dashboard/onboarding",
+			"headers": {
+				"authorization": "Bearer manager:consumer-contract"
+			},
+			"expectStatus": 200,
+			"schema": "dashboard-onboarding"
+		},
+		{
+			"name": "drift-alerts",
+			"method": "GET",
+			"path": "/api/field/intelligence/drift-alerts?windowHours=24&minSampleCount=1",
+			"headers": {
+				"authorization": "Bearer manager:consumer-contract"
+			},
+			"expectStatus": 200,
+			"schema": "drift-alerts"
+		},
+		{
+			"name": "ops-incidents",
+			"method": "GET",
+			"path": "/api/field/ops/incidents?limit=20",
+			"headers": {
+				"authorization": "Bearer manager:consumer-contract"
+			},
+			"expectStatus": 200,
+			"schema": "ops-incidents"
+		}
+	]
+}

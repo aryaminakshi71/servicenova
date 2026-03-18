@@ -2,31 +2,31 @@ import {
 	configureFieldOpsPersistence,
 	hydrateFieldOpsIntelligenceHistoryFromPersistence,
 	hydrateFieldOpsStateFromPersistence,
-} from "../../features/field-ops";
+} from '../../features/field-ops';
 import {
 	configureIntegrationOutboxStore,
 	resetInMemoryIntegrationOutboxStore,
-} from "../../features/integrations/outbox";
+} from '../../features/integrations/outbox';
 import {
 	configureBackgroundJobStore,
 	resetInMemoryBackgroundJobStore,
-} from "../background-jobs";
+} from '../background-jobs';
 import {
 	configureFieldDashboardStateStore,
 	resetInMemoryFieldDashboardStateStore,
-} from "../field-dashboard-state";
-import { configureIdempotencyStore } from "../idempotency";
-import { DrizzleBackgroundJobsRepository } from "../persistence/background-jobs-repository";
-import { DrizzleFieldDashboardStateRepository } from "../persistence/field-dashboard-state-repository";
-import { DrizzleFieldOpsRepository } from "../persistence/field-ops-repository";
-import { DrizzleIdempotencyRepository } from "../persistence/idempotency-repository";
-import { DrizzleIntegrationOutboxRepository } from "../persistence/integration-outbox-repository";
-import { DrizzleRateLimitRepository } from "../persistence/rate-limit-repository";
+} from '../field-dashboard-state';
+import { configureIdempotencyStore } from '../idempotency';
+import { DrizzleBackgroundJobsRepository } from '../persistence/background-jobs-repository';
+import { DrizzleFieldDashboardStateRepository } from '../persistence/field-dashboard-state-repository';
+import { DrizzleFieldOpsRepository } from '../persistence/field-ops-repository';
+import { DrizzleIdempotencyRepository } from '../persistence/idempotency-repository';
+import { DrizzleIntegrationOutboxRepository } from '../persistence/integration-outbox-repository';
+import { DrizzleRateLimitRepository } from '../persistence/rate-limit-repository';
 import {
 	configureRateLimitStore,
 	resetInMemoryRateLimitStore,
-} from "../rate-limit";
-import { withSpan } from "../tracing";
+} from '../rate-limit';
+import { withSpan } from '../tracing';
 
 type RuntimeLogger = {
 	info: (message: string) => void;
@@ -34,7 +34,7 @@ type RuntimeLogger = {
 };
 
 const isTestRuntime =
-	process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+	process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 
 const defaultLogger: RuntimeLogger = {
 	info: (message) => {
@@ -52,17 +52,17 @@ const defaultLogger: RuntimeLogger = {
 export async function configureFieldOpsPersistenceFromEnv(
 	logger: RuntimeLogger = defaultLogger,
 ) {
-	const mode = process.env.FIELD_OPS_PERSISTENCE ?? "memory";
+	const mode = process.env.FIELD_OPS_PERSISTENCE ?? 'memory';
 
-	if (mode !== "postgres") {
+	if (mode !== 'postgres') {
 		resetInMemoryRateLimitStore();
 		resetInMemoryIntegrationOutboxStore();
 		resetInMemoryBackgroundJobStore();
 		resetInMemoryFieldDashboardStateStore();
 		logger.info(
-			"[persistence] FIELD_OPS_PERSISTENCE is not postgres; using in-memory mode",
+			'[persistence] FIELD_OPS_PERSISTENCE is not postgres; using in-memory mode',
 		);
-		return { mode: "memory" as const, enabled: false };
+		return { mode: 'memory' as const, enabled: false };
 	}
 
 	const databaseUrl = process.env.DATABASE_URL;
@@ -72,20 +72,20 @@ export async function configureFieldOpsPersistenceFromEnv(
 		resetInMemoryIntegrationOutboxStore();
 		resetInMemoryBackgroundJobStore();
 		resetInMemoryFieldDashboardStateStore();
-		logger.warn("[persistence] DATABASE_URL missing; using in-memory mode");
-		return { mode: "memory" as const, enabled: false };
+		logger.warn('[persistence] DATABASE_URL missing; using in-memory mode');
+		return { mode: 'memory' as const, enabled: false };
 	}
 
 	try {
 		const [postgresModule, drizzleModule] = await withSpan(
-			"db.persistence.initialize",
+			'db.persistence.initialize',
 			{
-				"db.system": "postgresql",
-				"db.operation": "initialize",
+				'db.system': 'postgresql',
+				'db.operation': 'initialize',
 			},
 			async () => {
-				const postgresModuleName = "postgres";
-				const drizzleModuleName = "drizzle-orm/postgres-js";
+				const postgresModuleName = 'postgres';
+				const drizzleModuleName = 'drizzle-orm/postgres-js';
 
 				const postgresModule = (await import(postgresModuleName)) as {
 					default: (url: string, options?: Record<string, unknown>) => unknown;
@@ -115,10 +115,10 @@ export async function configureFieldOpsPersistenceFromEnv(
 		configureFieldOpsPersistence(repository, { syncOnConfigure: false });
 
 		const { snapshot, workOrderRuns, assistBriefings } = await withSpan(
-			"db.persistence.hydrate_snapshot",
+			'db.persistence.hydrate_snapshot',
 			{
-				"db.system": "postgresql",
-				"db.operation": "hydrate_snapshot",
+				'db.system': 'postgresql',
+				'db.operation': 'hydrate_snapshot',
 			},
 			async () => {
 				const snapshot = await repository.loadCoreSnapshot();
@@ -147,9 +147,9 @@ export async function configureFieldOpsPersistenceFromEnv(
 			configureFieldOpsPersistence(repository, { syncOnConfigure: true });
 		}
 
-		logger.info("[persistence] Drizzle/Postgres persistence enabled");
+		logger.info('[persistence] Drizzle/Postgres persistence enabled');
 
-		return { mode: "postgres" as const, enabled: true };
+		return { mode: 'postgres' as const, enabled: true };
 	} catch (error) {
 		resetInMemoryRateLimitStore();
 		resetInMemoryIntegrationOutboxStore();
@@ -158,6 +158,6 @@ export async function configureFieldOpsPersistenceFromEnv(
 		logger.warn(
 			`[persistence] Failed to initialize postgres adapter: ${String(error)}`,
 		);
-		return { mode: "memory" as const, enabled: false };
+		return { mode: 'memory' as const, enabled: false };
 	}
 }

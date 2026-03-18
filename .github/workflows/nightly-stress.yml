@@ -1,0 +1,76 @@
+name: Nightly Stress
+
+on:
+  schedule:
+    - cron: "30 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  stress_and_fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Stress Performance Gate
+        env:
+          PERF_GATE_REQUESTS: "1600"
+          PERF_GATE_CONCURRENCY: "40"
+          PERF_GATE_MAX_P95_MS: "2500"
+          PERF_GATE_MAX_ERROR_RATE: "0.03"
+          PERF_GATE_MIN_THROUGHPUT_RPS: "20"
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label nightly:perf-gate \
+            --output test-results/ci-timing/nightly-perf-gate.json \
+            -- \
+            bun run perf:gate
+
+      - name: Security Fuzz Suite
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label nightly:security-fuzz \
+            --output test-results/ci-timing/nightly-security-fuzz.json \
+            -- \
+            bun run test:security:fuzz
+
+      - name: Chaos Resilience Suite
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label nightly:chaos-resilience \
+            --output test-results/ci-timing/nightly-chaos-resilience.json \
+            -- \
+            bun run test:chaos:resilience
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels nightly:perf-gate,nightly:security-fuzz,nightly:chaos-resilience
+
+      - name: Upload Nightly Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-stress-artifacts
+          path: |
+            test-results/ci-timing
+            test-results/performance-gate.json
+          if-no-files-found: ignore
