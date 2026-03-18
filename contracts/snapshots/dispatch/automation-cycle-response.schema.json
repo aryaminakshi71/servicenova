@@ -1,0 +1,76 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"disruption": {
+			"additionalProperties": false,
+			"properties": {
+				"detectedSignals": {
+					"type": "number"
+				},
+				"processedSignals": {
+					"type": "number"
+				}
+			},
+			"type": "object"
+		},
+		"driftAlerts": {
+			"items": {},
+			"type": "array"
+		},
+		"metrics": {
+			"additionalProperties": false,
+			"properties": {
+				"errorRate": {
+					"type": "number"
+				},
+				"p95Ms": {
+					"type": "number"
+				},
+				"sloBreached": {
+					"type": "boolean"
+				},
+				"totalRequests": {
+					"type": "number"
+				}
+			},
+			"required": ["totalRequests", "p95Ms", "errorRate", "sloBreached"],
+			"type": "object"
+		},
+		"optimization": {
+			"additionalProperties": false,
+			"properties": {
+				"assignments": {
+					"items": {
+						"additionalProperties": false,
+						"properties": {
+							"jobId": {
+								"minLength": 1,
+								"type": "string"
+							},
+							"toTechnicianId": {
+								"minLength": 1,
+								"type": "string"
+							}
+						},
+						"required": ["jobId", "toTechnicianId"],
+						"type": "object"
+					},
+					"type": "array"
+				},
+				"totalCandidateJobs": {
+					"type": "number"
+				},
+				"unassignedJobIds": {
+					"items": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"type": "object"
+}

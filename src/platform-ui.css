@@ -1,0 +1,98 @@
+:root {
+	--platform-bg: #0b1220;
+	--platform-surface: #121b2c;
+	--platform-surface-2: #1a2740;
+	--platform-text: #e6edf8;
+	--platform-text-muted: #9fb2cf;
+	--platform-border: #2a3b5d;
+	--platform-accent: #3dd2ff;
+	--platform-accent-2: #34d399;
+	--platform-danger: #ef4444;
+	--platform-warning: #f59e0b;
+	--platform-success: #22c55e;
+	--platform-shadow: 0 12px 36px rgba(3, 8, 18, 0.36);
+}
+
+.platform-shell {
+	min-height: 100vh;
+	background:
+		radial-gradient(
+			circle at 18% 12%,
+			rgba(61, 210, 255, 0.08),
+			transparent 36%
+		),
+		radial-gradient(circle at 86% 8%, rgba(52, 211, 153, 0.08), transparent 30%),
+		var(--platform-bg);
+	color: var(--platform-text);
+}
+
+.platform-card {
+	background: linear-gradient(
+		180deg,
+		rgba(18, 27, 44, 0.96),
+		rgba(16, 24, 38, 0.96)
+	);
+	border: 1px solid var(--platform-border);
+	border-radius: 14px;
+	box-shadow: var(--platform-shadow);
+}
+
+.platform-card:hover {
+	border-color: rgba(61, 210, 255, 0.65);
+}
+
+.platform-title {
+	color: var(--platform-text);
+}
+
+.platform-text-muted {
+	color: var(--platform-text-muted);
+}
+
+.platform-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	border-radius: 10px;
+	border: 1px solid transparent;
+	padding: 9px 14px;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: none;
+	transition:
+		transform 0.15s ease,
+		border-color 0.15s ease,
+		background-color 0.15s ease;
+}
+
+.platform-btn:active {
+	transform: translateY(1px);
+}
+
+.platform-btn-primary {
+	background: linear-gradient(
+		135deg,
+		var(--platform-accent),
+		var(--platform-accent-2)
+	);
+	color: #062235;
+}
+
+.platform-btn-secondary {
+	background: rgba(159, 178, 207, 0.12);
+	border-color: var(--platform-border);
+	color: var(--platform-text);
+}
+
+.platform-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 8px;
+	border-radius: 999px;
+	border: 1px solid var(--platform-border);
+	color: var(--platform-text-muted);
+	background: rgba(42, 59, 93, 0.22);
+	font-size: 12px;
+	font-weight: 600;
+}

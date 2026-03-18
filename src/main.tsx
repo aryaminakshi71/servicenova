@@ -1,10 +1,17 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "./App";
-import "./styles.css";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { App } from './App';
+import { initPlatformObservability } from './lib/platform-observability';
+import './styles.css';
+import './platform-ui.css';
 
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+initPlatformObservability({ appId: 'servicenova' });
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+	ReactDOM.createRoot(rootElement).render(
+		<React.StrictMode>
+			<App />
+		</React.StrictMode>,
+	);
+}

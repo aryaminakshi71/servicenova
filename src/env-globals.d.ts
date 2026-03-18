@@ -1,0 +1,2 @@
+declare const __SERVICENOVA_GOOGLE_AUTH_ENABLED__: boolean;
+declare const __SERVICENOVA_GITHUB_AUTH_ENABLED__: boolean;

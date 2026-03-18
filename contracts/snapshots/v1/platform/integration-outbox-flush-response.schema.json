@@ -1,0 +1,67 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"result": {
+			"additionalProperties": false,
+			"properties": {
+				"deadLettered": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"delivered": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"failed": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"processed": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				}
+			},
+			"required": ["processed", "delivered", "failed", "deadLettered"],
+			"type": "object"
+		},
+		"summary": {
+			"additionalProperties": false,
+			"properties": {
+				"deadLetter": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"delivered": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"pending": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"processing": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"total": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				}
+			},
+			"required": ["total", "pending", "processing", "delivered", "deadLetter"],
+			"type": "object"
+		}
+	},
+	"required": ["result", "summary"],
+	"type": "object"
+}

@@ -1,0 +1,138 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"entries": {
+			"items": {
+				"additionalProperties": false,
+				"properties": {
+					"attempts": {
+						"maximum": 9007199254740991,
+						"minimum": 0,
+						"type": "integer"
+					},
+					"createdAt": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"deliveredAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"id": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"lastError": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"nextAttemptAt": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"payload": {
+						"additionalProperties": false,
+						"properties": {
+							"customerId": {
+								"minLength": 1,
+								"type": "string"
+							},
+							"jobId": {
+								"minLength": 1,
+								"type": "string"
+							},
+							"status": {
+								"enum": ["open", "assigned", "in_progress", "closed"],
+								"type": "string"
+							},
+							"timestamp": {
+								"minLength": 1,
+								"type": "string"
+							}
+						},
+						"required": ["jobId", "customerId", "status", "timestamp"],
+						"type": "object"
+					},
+					"status": {
+						"enum": ["pending", "processing", "delivered", "dead_letter"],
+						"type": "string"
+					},
+					"tenantId": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"type": {
+						"enum": ["crm_work_order_event"],
+						"type": "string"
+					},
+					"updatedAt": {
+						"minLength": 1,
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"tenantId",
+					"type",
+					"status",
+					"payload",
+					"attempts",
+					"nextAttemptAt",
+					"createdAt",
+					"updatedAt",
+					"deliveredAt",
+					"lastError"
+				],
+				"type": "object"
+			},
+			"type": "array"
+		},
+		"summary": {
+			"additionalProperties": false,
+			"properties": {
+				"deadLetter": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"delivered": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"pending": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"processing": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"total": {
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				}
+			},
+			"required": ["total", "pending", "processing", "delivered", "deadLetter"],
+			"type": "object"
+		}
+	},
+	"required": ["summary", "entries"],
+	"type": "object"
+}

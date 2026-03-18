@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  quality:
+  lint_format:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,20 +17,616 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install
-        run: bun install
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label lint_format:biome-check \
+            --output test-results/ci-timing/lint-format-biome-check.json \
+            -- \
+            bunx biome check \
+              .github/workflows/ci.yml \
+              .github/workflows/branch-protection-sync.yml \
+              .github/workflows/protected-branch-guard.yml \
+              .github/workflows/deploy.yml \
+              .github/workflows/nightly-stress.yml \
+              .github/workflows/post-deploy-canary.yml \
+              .github/settings.yml \
+              playwright.config.ts \
+              vite.config.ts \
+              src/server/app.ts \
+              src/server/routes/auth.ts \
+              src/server/routes/dispatch.contract.schemas.ts \
+              src/server/routes/platform.contract.schemas.ts \
+              src/server/routes/consumer.contract.integration.test.ts \
+              src/server/routes/chaos.resilience.integration.test.ts \
+              src/server/routes/dispatch.contract.integration.test.ts \
+              src/server/routes/field.integration.test.ts \
+              src/server/tracing.ts \
+              src/server/persistence/db-tracing.ts \
+              src/server/test-controls.ts \
+              src/server/test-controls.test.ts \
+              src/features/integrations/providers/http.chaos.test.ts \
+              scripts/contracts/check-dispatch-contract-snapshots.ts \
+              scripts/ci/run-timed-command.mjs \
+              scripts/ci/check-biome-ratchet.mjs \
+              scripts/ci/check-timing-budgets.mjs \
+              scripts/ci/apply-branch-protection.mjs \
+              scripts/ci/enforce-dependency-policy.mjs \
+              scripts/ci/verify-protected-branch-governance.mjs \
+              scripts/ci/verify-branch-protection-policy.mjs \
+              scripts/ci/performance-gate.ts \
+              scripts/ci/run-canary-flow.ts \
+              scripts/ci/generate-sbom.mjs \
+              scripts/ci/generate-provenance.mjs \
+              scripts/ci/rehearse-migrations.sh \
+              scripts/ci/sign-supply-chain.sh \
+              scripts/ci/sign-supply-chain-cosign.sh \
+              scripts/ci/report-playwright-flakiness.mjs \
+              .github/ci/timing-baselines.json \
+              .github/ci/biome-ratchet-baseline.json \
+              .github/ci/branch-protection-policy.json \
+              .github/ci/dependency-policy.json \
+              .github/ci/contract-version-policy.json \
+              contracts/consumers/dispatch-dashboard.v1.json \
+              e2e/auth.spec.ts \
+              e2e/dashboard.spec.ts \
+              e2e/health.spec.ts \
+              e2e/test-helpers.ts
+
+      - name: Format Check
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label lint_format:biome-format \
+            --output test-results/ci-timing/lint-format-biome-format.json \
+            -- \
+            bunx biome format \
+              .github/workflows/ci.yml \
+              .github/workflows/branch-protection-sync.yml \
+              .github/workflows/protected-branch-guard.yml \
+              .github/workflows/deploy.yml \
+              .github/workflows/nightly-stress.yml \
+              .github/workflows/post-deploy-canary.yml \
+              .github/settings.yml \
+              playwright.config.ts \
+              vite.config.ts \
+              src/server/app.ts \
+              src/server/routes/auth.ts \
+              src/server/routes/dispatch.contract.schemas.ts \
+              src/server/routes/platform.contract.schemas.ts \
+              src/server/routes/consumer.contract.integration.test.ts \
+              src/server/routes/chaos.resilience.integration.test.ts \
+              src/server/routes/dispatch.contract.integration.test.ts \
+              src/server/routes/field.integration.test.ts \
+              src/server/tracing.ts \
+              src/server/persistence/db-tracing.ts \
+              src/server/test-controls.ts \
+              src/server/test-controls.test.ts \
+              src/features/integrations/providers/http.chaos.test.ts \
+              scripts/contracts/check-dispatch-contract-snapshots.ts \
+              scripts/ci/run-timed-command.mjs \
+              scripts/ci/check-biome-ratchet.mjs \
+              scripts/ci/check-timing-budgets.mjs \
+              scripts/ci/apply-branch-protection.mjs \
+              scripts/ci/enforce-dependency-policy.mjs \
+              scripts/ci/verify-protected-branch-governance.mjs \
+              scripts/ci/verify-branch-protection-policy.mjs \
+              scripts/ci/performance-gate.ts \
+              scripts/ci/run-canary-flow.ts \
+              scripts/ci/generate-sbom.mjs \
+              scripts/ci/generate-provenance.mjs \
+              scripts/ci/rehearse-migrations.sh \
+              scripts/ci/sign-supply-chain.sh \
+              scripts/ci/sign-supply-chain-cosign.sh \
+              scripts/ci/report-playwright-flakiness.mjs \
+              .github/ci/timing-baselines.json \
+              .github/ci/biome-ratchet-baseline.json \
+              .github/ci/branch-protection-policy.json \
+              .github/ci/dependency-policy.json \
+              .github/ci/contract-version-policy.json \
+              contracts/consumers/dispatch-dashboard.v1.json \
+              e2e/auth.spec.ts \
+              e2e/dashboard.spec.ts \
+              e2e/health.spec.ts \
+              e2e/test-helpers.ts
+
+      - name: Repo Lint Ratchet
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label lint_format:biome-ratchet \
+            --output test-results/ci-timing/lint-format-biome-ratchet.json \
+            -- \
+            bun run lint:ratchet:check
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels lint_format:biome-check,lint_format:biome-format,lint_format:biome-ratchet
+
+      - name: Upload Timing Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-timings-lint-format
+          path: test-results/ci-timing
+          if-no-files-found: ignore
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
 
       - name: Typecheck
-        run: bun run typecheck
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label typecheck:tsc \
+            --output test-results/ci-timing/typecheck-tsc.json \
+            -- \
+            bun run typecheck
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels typecheck:tsc
+
+      - name: Upload Timing Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-timings-typecheck
+          path: test-results/ci-timing
+          if-no-files-found: ignore
+
+  branch_protection_policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Branch Protection Policy Check
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label branch-protection:policy \
+            --output test-results/ci-timing/branch-protection-policy.json \
+            -- \
+            bun run branch-protection:check
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels branch-protection:policy
+
+      - name: Upload Timing Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-timings-branch-protection
+          path: test-results/ci-timing
+          if-no-files-found: ignore
+
+  unit_api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Install Cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3.8.1
 
       - name: Unit Tests
-        run: bun run test:unit
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:test-unit \
+            --output test-results/ci-timing/unit-api-test-unit.json \
+            -- \
+            bun run test:unit
 
       - name: API Contract Tests
-        run: bun run test:api
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:test-api \
+            --output test-results/ci-timing/unit-api-test-api.json \
+            -- \
+            bun run test:api
+
+      - name: Contract Snapshot Drift Check
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:contract-snapshots \
+            --output test-results/ci-timing/unit-api-contract-snapshots.json \
+            -- \
+            bun run contract:snapshots:check
+
+      - name: Coverage Gate
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:test-coverage \
+            --output test-results/ci-timing/unit-api-test-coverage.json \
+            -- \
+            bun run test:coverage
 
       - name: Migration Drift Check
-        run: bun run db:check
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:db-check \
+            --output test-results/ci-timing/unit-api-db-check.json \
+            -- \
+            bun run db:check
 
       - name: Build
-        run: bun run build
+        if: github.event_name != 'pull_request'
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:build \
+            --output test-results/ci-timing/unit-api-build.json \
+            -- \
+            bun run build
+
+      - name: Generate SBOM
+        if: github.event_name != 'pull_request'
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:sbom \
+            --output test-results/ci-timing/unit-api-sbom.json \
+            -- \
+            bun run sbom:generate
+
+      - name: Generate Build Provenance
+        if: github.event_name != 'pull_request'
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:provenance \
+            --output test-results/ci-timing/unit-api-provenance.json \
+            -- \
+            bun run provenance:generate
+
+      - name: Sign SBOM and Provenance
+        if: github.event_name != 'pull_request'
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label unit_api:supply-chain-sign \
+            --output test-results/ci-timing/unit-api-supply-chain-sign.json \
+            -- \
+            bun run supply-chain:sign:cosign
+
+      - name: Timing Budget Gate
+        if: github.event_name != 'pull_request'
+        run: |
+          bun run ci:timing:check -- \
+            --labels unit_api:test-unit,unit_api:test-api,unit_api:contract-snapshots,unit_api:test-coverage,unit_api:db-check,unit_api:build,unit_api:sbom,unit_api:provenance,unit_api:supply-chain-sign
+
+      - name: Timing Budget Gate (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          bun run ci:timing:check -- \
+            --labels unit_api:test-unit,unit_api:test-api,unit_api:contract-snapshots,unit_api:test-coverage,unit_api:db-check
+
+      - name: Upload Timing Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-timings-unit-api
+          path: test-results/ci-timing
+          if-no-files-found: ignore
+
+      - name: Upload Supply Chain Artifacts
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-artifacts
+          path: |
+            test-results/sbom.cdx.json
+            test-results/provenance.json
+            test-results/supply-chain-signatures
+          if-no-files-found: ignore
+
+  security_gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Dependency Policy Gate
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label security:dependency-policy \
+            --output test-results/ci-timing/security-dependency-policy.json \
+            -- \
+            bun run security:dep-policy
+
+      - name: Secret Scan (Gitleaks)
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Vulnerability Scan (High/Critical)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: sarif
+          output: test-results/trivy-results.sarif
+          skip-dirs: node_modules,dist,playwright-report,test-results
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels security:dependency-policy
+
+      - name: Upload Security Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-gate-artifacts
+          path: |
+            test-results/trivy-results.sarif
+            test-results/ci-timing
+          if-no-files-found: ignore
+
+  migration_rehearsal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Migration Forward/Rollback Rehearsal
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label migration:rehearsal \
+            --output test-results/ci-timing/migration-rehearsal.json \
+            -- \
+            bun run db:migration:rehearsal
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels migration:rehearsal
+
+      - name: Upload Migration Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-rehearsal-artifacts
+          path: |
+            test-results/migration-rehearsal
+            test-results/ci-timing
+          if-no-files-found: ignore
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      E2E_TEST_RESET_TOKEN: ci-e2e-reset-token
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Restore Playwright Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'playwright.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright Browser
+        run: bunx playwright install --with-deps chromium
+
+      - name: E2E Tests
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label e2e:playwright \
+            --output test-results/ci-timing/e2e-playwright.json \
+            -- \
+            bash -lc 'PLAYWRIGHT_JSON_OUTPUT_NAME=test-results/playwright-report.json bunx playwright test --reporter=html,json'
+
+      - name: Flaky Detection Report
+        if: always()
+        env:
+          FAIL_ON_FLAKY: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 'true' || 'false' }}
+        run: |
+          node scripts/ci/report-playwright-flakiness.mjs \
+            --input test-results/playwright-report.json \
+            --output test-results/playwright-flaky-summary.json
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels e2e:playwright
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+
+      - name: Upload Timing Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-timings-e2e
+          path: test-results/ci-timing
+          if-no-files-found: ignore
+
+  performance_gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Restore Bun Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Performance Gate
+        run: |
+          node scripts/ci/run-timed-command.mjs \
+            --label performance:gate \
+            --output test-results/ci-timing/performance-gate.json \
+            -- \
+            bun run perf:gate
+
+      - name: Timing Budget Gate
+        run: |
+          bun run ci:timing:check -- \
+            --labels performance:gate
+
+      - name: Upload Performance Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-gate
+          path: |
+            test-results/performance-gate.json
+            test-results/ci-timing
+          if-no-files-found: ignore

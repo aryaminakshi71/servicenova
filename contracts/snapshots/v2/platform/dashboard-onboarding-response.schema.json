@@ -1,0 +1,46 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"properties": {
+		"onboarding": {
+			"additionalProperties": false,
+			"properties": {
+				"automationCycle": {
+					"type": "boolean"
+				},
+				"dismissed": {
+					"type": "boolean"
+				},
+				"dispatchOptimized": {
+					"type": "boolean"
+				},
+				"intelligenceRun": {
+					"type": "boolean"
+				},
+				"selectedJob": {
+					"type": "boolean"
+				},
+				"updatedAt": {
+					"minLength": 1,
+					"type": "string"
+				},
+				"updatedBy": {
+					"minLength": 1,
+					"type": "string"
+				}
+			},
+			"required": [
+				"selectedJob",
+				"intelligenceRun",
+				"dispatchOptimized",
+				"automationCycle",
+				"dismissed",
+				"updatedAt",
+				"updatedBy"
+			],
+			"type": "object"
+		}
+	},
+	"required": ["onboarding"],
+	"type": "object"
+}

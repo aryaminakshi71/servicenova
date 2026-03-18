@@ -1,7 +1,27 @@
-CREATE TYPE "public"."background_job_status" AS ENUM('queued', 'running', 'completed', 'failed');--> statement-breakpoint
-CREATE TYPE "public"."background_job_type" AS ENUM('dispatch_auto_disruption', 'dispatch_optimize', 'integration_outbox_flush');--> statement-breakpoint
-CREATE TYPE "public"."integration_outbox_status" AS ENUM('pending', 'processing', 'delivered', 'dead_letter');--> statement-breakpoint
-CREATE TYPE "public"."integration_outbox_type" AS ENUM('crm_work_order_event');--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."background_job_status" AS ENUM('queued', 'running', 'completed', 'failed');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."background_job_type" AS ENUM('dispatch_auto_disruption', 'dispatch_optimize', 'integration_outbox_flush');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."integration_outbox_status" AS ENUM('pending', 'processing', 'delivered', 'dead_letter');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."integration_outbox_type" AS ENUM('crm_work_order_event');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "background_jobs" (
 	"id" text PRIMARY KEY NOT NULL,
 	"tenant_id" text DEFAULT 'default' NOT NULL,

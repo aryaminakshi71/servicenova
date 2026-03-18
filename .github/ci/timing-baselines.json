@@ -1,0 +1,26 @@
+{
+	"allowedRegressionPercent": 20,
+	"labels": {
+		"lint_format:biome-check": 25,
+		"lint_format:biome-format": 20,
+		"lint_format:biome-ratchet": 45,
+		"typecheck:tsc": 70,
+		"branch-protection:policy": 20,
+		"unit_api:test-unit": 120,
+		"unit_api:test-api": 90,
+		"unit_api:contract-snapshots": 20,
+		"unit_api:test-coverage": 200,
+		"unit_api:db-check": 120,
+		"unit_api:build": 240,
+		"unit_api:sbom": 20,
+		"unit_api:provenance": 20,
+		"unit_api:supply-chain-sign": 20,
+		"security:dependency-policy": 20,
+		"migration:rehearsal": 420,
+		"e2e:playwright": 300,
+		"performance:gate": 45,
+		"nightly:perf-gate": 180,
+		"nightly:security-fuzz": 300,
+		"nightly:chaos-resilience": 300
+	}
+}

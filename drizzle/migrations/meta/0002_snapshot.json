@@ -1,979 +1,979 @@
 {
-  "id": "63b75d56-d97e-4135-8ed1-c47e5b29599d",
-  "prevId": "a1d787a9-9224-464b-9ab6-a4ba99115cee",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": {
-    "public.audit_trail": {
-      "name": "audit_trail",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "event_type": {
-          "name": "event_type",
-          "type": "audit_event_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "actor": {
-          "name": "actor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "details": {
-          "name": "details",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.escalation_events": {
-      "name": "escalation_events",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "severity": {
-          "name": "severity",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rule": {
-          "name": "rule",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "triggered_at": {
-          "name": "triggered_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "escalation_events_job_id_service_jobs_id_fk": {
-          "name": "escalation_events_job_id_service_jobs_id_fk",
-          "tableFrom": "escalation_events",
-          "tableTo": "service_jobs",
-          "columnsFrom": ["job_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.idempotency_keys": {
-      "name": "idempotency_keys",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "scope_key": {
-          "name": "scope_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "response_status": {
-          "name": "response_status",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "response_body": {
-          "name": "response_body",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.job_checklist_items": {
-      "name": "job_checklist_items",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "required": {
-          "name": "required",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "done": {
-          "name": "done",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "job_checklist_items_job_id_service_jobs_id_fk": {
-          "name": "job_checklist_items_job_id_service_jobs_id_fk",
-          "tableFrom": "job_checklist_items",
-          "tableTo": "service_jobs",
-          "columnsFrom": ["job_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.maintenance_risk_assessments": {
-      "name": "maintenance_risk_assessments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "asset_id": {
-          "name": "asset_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "risk_score": {
-          "name": "risk_score",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "risk_band": {
-          "name": "risk_band",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "factors": {
-          "name": "factors",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "generated_at": {
-          "name": "generated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.manual_overrides": {
-      "name": "manual_overrides",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "actor": {
-          "name": "actor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "changes": {
-          "name": "changes",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "manual_overrides_job_id_service_jobs_id_fk": {
-          "name": "manual_overrides_job_id_service_jobs_id_fk",
-          "tableFrom": "manual_overrides",
-          "tableTo": "service_jobs",
-          "columnsFrom": ["job_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.proof_of_service_artifacts": {
-      "name": "proof_of_service_artifacts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "proof_url": {
-          "name": "proof_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "note": {
-          "name": "note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "uploaded_at": {
-          "name": "uploaded_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "proof_of_service_artifacts_job_id_service_jobs_id_fk": {
-          "name": "proof_of_service_artifacts_job_id_service_jobs_id_fk",
-          "tableFrom": "proof_of_service_artifacts",
-          "tableTo": "service_jobs",
-          "columnsFrom": ["job_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.rate_limit_counters": {
-      "name": "rate_limit_counters",
-      "schema": "",
-      "columns": {
-        "scope_key": {
-          "name": "scope_key",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "hit_count": {
-          "name": "hit_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "reset_at": {
-          "name": "reset_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "rate_limit_counters_reset_at_idx": {
-          "name": "rate_limit_counters_reset_at_idx",
-          "columns": [
-            {
-              "expression": "reset_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.route_plans": {
-      "name": "route_plans",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "technician_id": {
-          "name": "technician_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "route_summary": {
-          "name": "route_summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "total_travel_minutes": {
-          "name": "total_travel_minutes",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_distance_km": {
-          "name": "total_distance_km",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "delay_risk": {
-          "name": "delay_risk",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'low'"
-        },
-        "triggered_by": {
-          "name": "triggered_by",
-          "type": "route_plan_trigger",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'manual'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "route_plans_technician_id_technicians_id_fk": {
-          "name": "route_plans_technician_id_technicians_id_fk",
-          "tableFrom": "route_plans",
-          "tableTo": "technicians",
-          "columnsFrom": ["technician_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.service_jobs": {
-      "name": "service_jobs",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "customer_id": {
-          "name": "customer_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "location": {
-          "name": "location",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location_lat": {
-          "name": "location_lat",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "location_lng": {
-          "name": "location_lng",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "version": {
-          "name": "version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "status": {
-          "name": "status",
-          "type": "service_job_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'open'"
-        },
-        "technician_id": {
-          "name": "technician_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "required_skills_csv": {
-          "name": "required_skills_csv",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "job_priority",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'normal'"
-        },
-        "sla_due_at": {
-          "name": "sla_due_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "estimated_minutes": {
-          "name": "estimated_minutes",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 60
-        },
-        "completion_notes": {
-          "name": "completion_notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "first_time_fix": {
-          "name": "first_time_fix",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "service_jobs_technician_id_technicians_id_fk": {
-          "name": "service_jobs_technician_id_technicians_id_fk",
-          "tableFrom": "service_jobs",
-          "tableTo": "technicians",
-          "columnsFrom": ["technician_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sla_breaches": {
-      "name": "sla_breaches",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "priority": {
-          "name": "priority",
-          "type": "job_priority",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "minutes_overdue": {
-          "name": "minutes_overdue",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "escalated": {
-          "name": "escalated",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "breached_at": {
-          "name": "breached_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "cleared_at": {
-          "name": "cleared_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "sla_breaches_job_id_service_jobs_id_fk": {
-          "name": "sla_breaches_job_id_service_jobs_id_fk",
-          "tableFrom": "sla_breaches",
-          "tableTo": "service_jobs",
-          "columnsFrom": ["job_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.technician_shifts": {
-      "name": "technician_shifts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "technician_id": {
-          "name": "technician_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_time": {
-          "name": "start_time",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_time": {
-          "name": "end_time",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "effective_date": {
-          "name": "effective_date",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "technician_shifts_technician_id_technicians_id_fk": {
-          "name": "technician_shifts_technician_id_technicians_id_fk",
-          "tableFrom": "technician_shifts",
-          "tableTo": "technicians",
-          "columnsFrom": ["technician_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.technicians": {
-      "name": "technicians",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "technician_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'available'"
-        },
-        "home_base": {
-          "name": "home_base",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location_lat": {
-          "name": "location_lat",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "location_lng": {
-          "name": "location_lng",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "skills_csv": {
-          "name": "skills_csv",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "shift_start": {
-          "name": "shift_start",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'08:00'"
-        },
-        "shift_end": {
-          "name": "shift_end",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'17:00'"
-        },
-        "active_job_count": {
-          "name": "active_job_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "max_concurrent_jobs": {
-          "name": "max_concurrent_jobs",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 2
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.unassigned_queue": {
-      "name": "unassigned_queue",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "queued_at": {
-          "name": "queued_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "resolved_at": {
-          "name": "resolved_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "unassigned_queue_job_id_service_jobs_id_fk": {
-          "name": "unassigned_queue_job_id_service_jobs_id_fk",
-          "tableFrom": "unassigned_queue",
-          "tableTo": "service_jobs",
-          "columnsFrom": ["job_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    }
-  },
-  "enums": {
-    "public.audit_event_type": {
-      "name": "audit_event_type",
-      "schema": "public",
-      "values": [
-        "job_assigned",
-        "job_reassigned",
-        "job_unassigned",
-        "job_completed",
-        "manual_override",
-        "shift_updated",
-        "route_replanned"
-      ]
-    },
-    "public.job_priority": {
-      "name": "job_priority",
-      "schema": "public",
-      "values": ["low", "normal", "high", "urgent"]
-    },
-    "public.route_plan_trigger": {
-      "name": "route_plan_trigger",
-      "schema": "public",
-      "values": ["manual", "traffic", "assignment"]
-    },
-    "public.service_job_status": {
-      "name": "service_job_status",
-      "schema": "public",
-      "values": ["open", "assigned", "in_progress", "closed"]
-    },
-    "public.technician_status": {
-      "name": "technician_status",
-      "schema": "public",
-      "values": ["available", "busy", "offline"]
-    }
-  },
-  "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "views": {},
-  "_meta": {
-    "columns": {},
-    "schemas": {},
-    "tables": {}
-  }
+	"id": "63b75d56-d97e-4135-8ed1-c47e5b29599d",
+	"prevId": "a1d787a9-9224-464b-9ab6-a4ba99115cee",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.audit_trail": {
+			"name": "audit_trail",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"event_type": {
+					"name": "event_type",
+					"type": "audit_event_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"actor": {
+					"name": "actor",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"details": {
+					"name": "details",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.escalation_events": {
+			"name": "escalation_events",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"job_id": {
+					"name": "job_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"severity": {
+					"name": "severity",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"rule": {
+					"name": "rule",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"triggered_at": {
+					"name": "triggered_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"escalation_events_job_id_service_jobs_id_fk": {
+					"name": "escalation_events_job_id_service_jobs_id_fk",
+					"tableFrom": "escalation_events",
+					"tableTo": "service_jobs",
+					"columnsFrom": ["job_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.idempotency_keys": {
+			"name": "idempotency_keys",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"scope_key": {
+					"name": "scope_key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"response_status": {
+					"name": "response_status",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"response_body": {
+					"name": "response_body",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.job_checklist_items": {
+			"name": "job_checklist_items",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"job_id": {
+					"name": "job_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"label": {
+					"name": "label",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"required": {
+					"name": "required",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": true
+				},
+				"done": {
+					"name": "done",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"job_checklist_items_job_id_service_jobs_id_fk": {
+					"name": "job_checklist_items_job_id_service_jobs_id_fk",
+					"tableFrom": "job_checklist_items",
+					"tableTo": "service_jobs",
+					"columnsFrom": ["job_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.maintenance_risk_assessments": {
+			"name": "maintenance_risk_assessments",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"asset_id": {
+					"name": "asset_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"risk_score": {
+					"name": "risk_score",
+					"type": "double precision",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"risk_band": {
+					"name": "risk_band",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"factors": {
+					"name": "factors",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"generated_at": {
+					"name": "generated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.manual_overrides": {
+			"name": "manual_overrides",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"job_id": {
+					"name": "job_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"actor": {
+					"name": "actor",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"reason": {
+					"name": "reason",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"changes": {
+					"name": "changes",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"manual_overrides_job_id_service_jobs_id_fk": {
+					"name": "manual_overrides_job_id_service_jobs_id_fk",
+					"tableFrom": "manual_overrides",
+					"tableTo": "service_jobs",
+					"columnsFrom": ["job_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.proof_of_service_artifacts": {
+			"name": "proof_of_service_artifacts",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"job_id": {
+					"name": "job_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"proof_url": {
+					"name": "proof_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"note": {
+					"name": "note",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"uploaded_at": {
+					"name": "uploaded_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"proof_of_service_artifacts_job_id_service_jobs_id_fk": {
+					"name": "proof_of_service_artifacts_job_id_service_jobs_id_fk",
+					"tableFrom": "proof_of_service_artifacts",
+					"tableTo": "service_jobs",
+					"columnsFrom": ["job_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.rate_limit_counters": {
+			"name": "rate_limit_counters",
+			"schema": "",
+			"columns": {
+				"scope_key": {
+					"name": "scope_key",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"hit_count": {
+					"name": "hit_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"reset_at": {
+					"name": "reset_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"rate_limit_counters_reset_at_idx": {
+					"name": "rate_limit_counters_reset_at_idx",
+					"columns": [
+						{
+							"expression": "reset_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.route_plans": {
+			"name": "route_plans",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"technician_id": {
+					"name": "technician_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"date": {
+					"name": "date",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"route_summary": {
+					"name": "route_summary",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"total_travel_minutes": {
+					"name": "total_travel_minutes",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"total_distance_km": {
+					"name": "total_distance_km",
+					"type": "double precision",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"delay_risk": {
+					"name": "delay_risk",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'low'"
+				},
+				"triggered_by": {
+					"name": "triggered_by",
+					"type": "route_plan_trigger",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'manual'"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"route_plans_technician_id_technicians_id_fk": {
+					"name": "route_plans_technician_id_technicians_id_fk",
+					"tableFrom": "route_plans",
+					"tableTo": "technicians",
+					"columnsFrom": ["technician_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.service_jobs": {
+			"name": "service_jobs",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"title": {
+					"name": "title",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"customer_id": {
+					"name": "customer_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"location": {
+					"name": "location",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"location_lat": {
+					"name": "location_lat",
+					"type": "double precision",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"location_lng": {
+					"name": "location_lng",
+					"type": "double precision",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"version": {
+					"name": "version",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 1
+				},
+				"status": {
+					"name": "status",
+					"type": "service_job_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'open'"
+				},
+				"technician_id": {
+					"name": "technician_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"required_skills_csv": {
+					"name": "required_skills_csv",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "''"
+				},
+				"priority": {
+					"name": "priority",
+					"type": "job_priority",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'normal'"
+				},
+				"sla_due_at": {
+					"name": "sla_due_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"estimated_minutes": {
+					"name": "estimated_minutes",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 60
+				},
+				"completion_notes": {
+					"name": "completion_notes",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"first_time_fix": {
+					"name": "first_time_fix",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"service_jobs_technician_id_technicians_id_fk": {
+					"name": "service_jobs_technician_id_technicians_id_fk",
+					"tableFrom": "service_jobs",
+					"tableTo": "technicians",
+					"columnsFrom": ["technician_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.sla_breaches": {
+			"name": "sla_breaches",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"job_id": {
+					"name": "job_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"priority": {
+					"name": "priority",
+					"type": "job_priority",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"minutes_overdue": {
+					"name": "minutes_overdue",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"escalated": {
+					"name": "escalated",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"breached_at": {
+					"name": "breached_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"cleared_at": {
+					"name": "cleared_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"sla_breaches_job_id_service_jobs_id_fk": {
+					"name": "sla_breaches_job_id_service_jobs_id_fk",
+					"tableFrom": "sla_breaches",
+					"tableTo": "service_jobs",
+					"columnsFrom": ["job_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.technician_shifts": {
+			"name": "technician_shifts",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"technician_id": {
+					"name": "technician_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"start_time": {
+					"name": "start_time",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"end_time": {
+					"name": "end_time",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"effective_date": {
+					"name": "effective_date",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"technician_shifts_technician_id_technicians_id_fk": {
+					"name": "technician_shifts_technician_id_technicians_id_fk",
+					"tableFrom": "technician_shifts",
+					"tableTo": "technicians",
+					"columnsFrom": ["technician_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.technicians": {
+			"name": "technicians",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "technician_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'available'"
+				},
+				"home_base": {
+					"name": "home_base",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"location_lat": {
+					"name": "location_lat",
+					"type": "double precision",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"location_lng": {
+					"name": "location_lng",
+					"type": "double precision",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"skills_csv": {
+					"name": "skills_csv",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "''"
+				},
+				"shift_start": {
+					"name": "shift_start",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'08:00'"
+				},
+				"shift_end": {
+					"name": "shift_end",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'17:00'"
+				},
+				"active_job_count": {
+					"name": "active_job_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"max_concurrent_jobs": {
+					"name": "max_concurrent_jobs",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 2
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.unassigned_queue": {
+			"name": "unassigned_queue",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"job_id": {
+					"name": "job_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"reason": {
+					"name": "reason",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"queued_at": {
+					"name": "queued_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"resolved_at": {
+					"name": "resolved_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"unassigned_queue_job_id_service_jobs_id_fk": {
+					"name": "unassigned_queue_job_id_service_jobs_id_fk",
+					"tableFrom": "unassigned_queue",
+					"tableTo": "service_jobs",
+					"columnsFrom": ["job_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {
+		"public.audit_event_type": {
+			"name": "audit_event_type",
+			"schema": "public",
+			"values": [
+				"job_assigned",
+				"job_reassigned",
+				"job_unassigned",
+				"job_completed",
+				"manual_override",
+				"shift_updated",
+				"route_replanned"
+			]
+		},
+		"public.job_priority": {
+			"name": "job_priority",
+			"schema": "public",
+			"values": ["low", "normal", "high", "urgent"]
+		},
+		"public.route_plan_trigger": {
+			"name": "route_plan_trigger",
+			"schema": "public",
+			"values": ["manual", "traffic", "assignment"]
+		},
+		"public.service_job_status": {
+			"name": "service_job_status",
+			"schema": "public",
+			"values": ["open", "assigned", "in_progress", "closed"]
+		},
+		"public.technician_status": {
+			"name": "technician_status",
+			"schema": "public",
+			"values": ["available", "busy", "offline"]
+		}
+	},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
 }

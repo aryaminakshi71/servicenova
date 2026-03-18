@@ -1,0 +1,12 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "test:integration": "vitest run src/integration --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test"
+  }
+}

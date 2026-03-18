@@ -1,0 +1,131 @@
+name: Post Deploy Canary
+
+on:
+  workflow_call:
+    inputs:
+      base_url:
+        required: true
+        type: string
+      auth_token:
+        required: false
+        type: string
+      rollout_webhook_url:
+        required: false
+        type: string
+      rollback_webhook_url:
+        required: false
+        type: string
+      phases:
+        required: false
+        type: string
+        default: "10,25,50,100"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Deployed application base URL (for example: https://app.example.com)"
+        required: true
+        type: string
+      auth_token:
+        description: "Optional bearer token for canary calls"
+        required: false
+        type: string
+      rollout_webhook_url:
+        description: "Optional rollout webhook URL (traffic phase control)"
+        required: false
+        type: string
+      rollback_webhook_url:
+        description: "Optional rollback webhook URL to invoke if canary fails"
+        required: false
+        type: string
+      phases:
+        description: "Comma-separated progressive rollout phases"
+        required: false
+        type: string
+        default: "10,25,50,100"
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Progressive Canary Flow
+        id: canary
+        env:
+          CANARY_BASE_URL: ${{ inputs.base_url }}
+          CANARY_AUTH_TOKEN: ${{ inputs.auth_token }}
+          CANARY_PHASES: ${{ inputs.phases }}
+          CANARY_ROLLOUT_WEBHOOK_URL: ${{ inputs.rollout_webhook_url }}
+          ROLLBACK_WEBHOOK_URL: ${{ inputs.rollback_webhook_url }}
+        run: |
+          set -euo pipefail
+          export ROLLBACK_TRIGGERED="false"
+
+          trigger_rollback() {
+            if [[ "$ROLLBACK_TRIGGERED" == "true" ]]; then
+              return
+            fi
+
+            if [[ -n "${ROLLBACK_WEBHOOK_URL:-}" ]]; then
+              echo "[canary] Triggering rollback webhook..."
+              curl -fsS -X POST "$ROLLBACK_WEBHOOK_URL" \
+                -H 'content-type: application/json' \
+                -d '{"reason":"post-deploy progressive canary failure","workflow":"Post Deploy Canary"}'
+            fi
+            export ROLLBACK_TRIGGERED="true"
+          }
+
+          on_error() {
+            echo "[canary] Progressive canary failed."
+            trigger_rollback
+            exit 1
+          }
+
+          trap on_error ERR
+
+          IFS=',' read -r -a phases <<< "${CANARY_PHASES:-10,25,50,100}"
+          for raw_phase in "${phases[@]}"; do
+            phase="$(echo "$raw_phase" | tr -d '[:space:]')"
+            if [[ -z "$phase" ]]; then
+              continue
+            fi
+
+            if [[ -n "${CANARY_ROLLOUT_WEBHOOK_URL:-}" ]]; then
+              echo "[canary] Advancing rollout to ${phase}%..."
+              curl -fsS -X POST "$CANARY_ROLLOUT_WEBHOOK_URL" \
+                -H 'content-type: application/json' \
+                -d "{\"phasePercent\":${phase},\"reason\":\"post-deploy progressive canary\"}"
+            fi
+
+            echo "[canary] Running canary checks at ${phase}%..."
+            CANARY_PHASE="$phase" \
+            CANARY_OUTPUT_PATH="test-results/canary-report-${phase}.json" \
+            node scripts/ci/run-timed-command.mjs \
+              --label canary:post-deploy \
+              --output "test-results/ci-timing/canary-post-deploy-${phase}.json" \
+              -- \
+              bun run canary:run
+          done
+
+          trap - ERR
+
+      - name: Upload Canary Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-artifacts
+          path: |
+            test-results/canary-report*.json
+            test-results/ci-timing
+          if-no-files-found: ignore
