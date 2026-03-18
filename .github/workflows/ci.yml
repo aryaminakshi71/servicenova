@@ -281,6 +281,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Cosign
+        if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3.8.1
 
       - name: Unit Tests
@@ -324,6 +325,7 @@ jobs:
             bun run db:check
 
       - name: Build
+        if: github.event_name != 'pull_request'
         run: |
           node scripts/ci/run-timed-command.mjs \
             --label unit_api:build \
@@ -332,6 +334,7 @@ jobs:
             bun run build
 
       - name: Generate SBOM
+        if: github.event_name != 'pull_request'
         run: |
           node scripts/ci/run-timed-command.mjs \
             --label unit_api:sbom \
@@ -340,6 +343,7 @@ jobs:
             bun run sbom:generate
 
       - name: Generate Build Provenance
+        if: github.event_name != 'pull_request'
         run: |
           node scripts/ci/run-timed-command.mjs \
             --label unit_api:provenance \
@@ -348,6 +352,7 @@ jobs:
             bun run provenance:generate
 
       - name: Sign SBOM and Provenance
+        if: github.event_name != 'pull_request'
         run: |
           node scripts/ci/run-timed-command.mjs \
             --label unit_api:supply-chain-sign \
@@ -356,9 +361,16 @@ jobs:
             bun run supply-chain:sign:cosign
 
       - name: Timing Budget Gate
+        if: github.event_name != 'pull_request'
         run: |
           bun run ci:timing:check -- \
             --labels unit_api:test-unit,unit_api:test-api,unit_api:contract-snapshots,unit_api:test-coverage,unit_api:db-check,unit_api:build,unit_api:sbom,unit_api:provenance,unit_api:supply-chain-sign
+
+      - name: Timing Budget Gate (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          bun run ci:timing:check -- \
+            --labels unit_api:test-unit,unit_api:test-api,unit_api:contract-snapshots,unit_api:test-coverage,unit_api:db-check
 
       - name: Upload Timing Artifacts
         if: always()
@@ -369,7 +381,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload Supply Chain Artifacts
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: supply-chain-artifacts
